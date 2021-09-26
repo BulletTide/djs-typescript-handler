@@ -16,7 +16,7 @@ npm install -y
 ```
 
 ## Usage
-__**Configuration:**__
+### Configuration
 1. Go to the `src/config` folder.
 2. Input the respective config options.
 3. Add your Discord User ID in the `DEVS` array.
@@ -38,7 +38,7 @@ export default class Template extends Command {
         });
     }
 
-    async execute ({ client, interaction, group, subcommand }: { client: Client, interaction: CommandInteraction, group: string, subcommand: string }) {
+    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }) {
         // 
     }
 }
