@@ -1,0 +1,10 @@
+{
+    "TOKEN": "",
+    "MONGODB_URI": "",
+    "DEVS": [],
+    "DEV_SERVERS": [],
+    "EMOTES": {
+        "SUCCESS": "✅",
+        "FAIL": "❎"
+    }
+}

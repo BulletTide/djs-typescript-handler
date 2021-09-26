@@ -1,0 +1,9 @@
+{
+    "TOKEN": "",
+    "DEVS": [],
+    "DEV_SERVERS": [],
+    "EMOTES": {
+        "SUCCESS": "✅",
+        "FAIL": "❎"
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "help": {
+        "description": "Get help on commands.",
+        "usage": "To get help on a specific command, use `/help [command name]` (without the [ ]).\nFor a full list of all commands, simply use `/help`.",
+        "examples": "`/help ping`",
+        "names": {
+            "usage": "Usage",
+            "aliases": "Aliases",
+            "examples": "Examples",
+            "noCategory": "No category",
+            "cooldown": "Cooldown",
+            "isDisabled": "This command is currently disabled in this server.",
+            "commandCategories": "Command categories",
+            "categoriesHelp": "Use `/help [category]` to get more info on a category, for example: `/help misc`",
+            "categoriesName": "Categories",
+            "categories": {
+                "Administration": "Administration",
+                "Moderation": "Moderation",
+                "Utility": "Utility",
+                "Misc": "Misc",
+                "No category": "No category"
+            }
+        }
+    },
+    "ping": {
+        "description": "Displays the bots current ping.",
+        "usage": "- `/ping`"
+    }
+}

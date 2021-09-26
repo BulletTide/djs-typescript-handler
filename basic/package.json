@@ -1,0 +1,36 @@
+{
+  "name": "discordjs-v13-handler",
+  "version": "1.0.0",
+  "description": "A basic typescript handler for discord.js v13.",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsc && node dist/src/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "pm2:start": "tsc && pm2 start dist/src/index.js --name dtsbot --attach",
+    "pm2:stop": "pm2 stop dist/src/index.js",
+    "pm2:restart": "pm2 stop dist/src/index.js && tsc && pm2 start dist/src/index.js --name dtsbot --attach"
+  },
+  "engines": {
+    "node": ">=16.6.0",
+    "npm": ">=7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BulletTide/discordjs-v13-handlers.git"
+  },
+  "author": "Bullet_Tide",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BulletTide/discordjs-v13-handlers/issues"
+  },
+  "homepage": "https://github.com/BulletTide/discordjs-v13-handlers#readme",
+  "dependencies": {
+    "discord.js": "^13.1.0"
+  },
+  "devDependencies": {
+    "pm2": "^5.1.1",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
+  }
+}
