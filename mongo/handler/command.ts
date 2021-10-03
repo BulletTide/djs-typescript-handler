@@ -98,7 +98,7 @@ function getSubcommandOptions (subcommands: { [x: string]: Subcommand }) {
         const option: ApplicationCommandOptionData = {
             name,
             description: subcommands[name].description,
-            options: subcommands[name].args,
+            options: subcommands[name].args ? subcommands[name].args! : [],
             type: 'SUB_COMMAND'
         };
 
