@@ -19,7 +19,7 @@ export default class Template extends Command {
         });
     }
 
-    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }) {
+    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> {
         const languageHelp = client.languages.help.names;
 
         const name = interaction.options.getString('name')?.toLowerCase();
@@ -46,7 +46,7 @@ export default class Template extends Command {
         } else if (category) {
             embed
                 .setTitle(category[0])
-                .setDescription('`' + category.slice(1).join('`, `') + '`');
+                .setDescription(`\`${category.slice(1).join('`, `')}\``);
 
             await interaction.reply({ embeds: [embed] });
         } else defaultHelp(client, interaction, languageHelp);
@@ -54,17 +54,17 @@ export default class Template extends Command {
 }
 
 /**
- * 
+ *
  * @param {Client} client The client object.
- * @param {CommandInteraction} interaction The command interaction object. 
- * @param {any} languageHelp 
+ * @param {CommandInteraction} interaction The command interaction object.
+ * @param {any} languageHelp
  */
- async function defaultHelp(client: Client, interaction: CommandInteraction, languageHelp: any) {
+async function defaultHelp(client: Client, interaction: CommandInteraction, languageHelp: any) {
     const embed = new MessageEmbed()
         .setTitle(languageHelp.commandCategories)
-        .setDescription(languageHelp.categoriesHelp,)
+        .setDescription(languageHelp.categoriesHelp)
         .setThumbnail(client.user!.displayAvatarURL())
-        .addField(languageHelp.categoriesName, client.categories.map(c => '> ' + languageHelp.categories[c[0]]).join('\n'));
+        .addField(languageHelp.categoriesName, client.categories.map(c => `> ${languageHelp.categories[c[0]]}`).join('\n'));
 
     await interaction.reply({ embeds: [embed] });
 }

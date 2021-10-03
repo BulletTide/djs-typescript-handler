@@ -82,7 +82,7 @@ function getSubcommandGroupOptions (groups: { [x: string]: SubcommandGroup }) {
             description: groups[name].description,
             options: getSubcommandOptions(groups[name].subcommands),
             type: 'SUB_COMMAND_GROUP'
-        }
+        };
 
         options.push(option);
     }
@@ -100,7 +100,7 @@ function getSubcommandOptions (subcommands: { [x: string]: Subcommand }) {
             description: subcommands[name].description,
             options: subcommands[name].args,
             type: 'SUB_COMMAND'
-        }
+        };
 
         options.push(option);
     }
@@ -149,7 +149,7 @@ function getSubcommandOptions (subcommands: { [x: string]: Subcommand }) {
 
 /**
  * @typedef SubcommandGroup The group for a subcommand.
- * @type {object} 
+ * @type {object}
  * @property {string} description The description for the subcommand group.
  * @property {Object.<string, Subcommand>} subcommands An object containing each subcommand.
  */
@@ -160,7 +160,7 @@ declare interface SubcommandGroup {
 
 /**
  * @typedef Subcommand The subcommand.
- * @type {object} 
+ * @type {object}
  * @property {string} description The description for the subcommand.
  * @property {Argument[]} [args] Argument(s) (options) for the subcommand.
  * @property {({ client, interaction, group, subcommand } : { client: import('../src/utils/client'), interaction: import('discord.js').CommandInteraction, group: string, subcommand: string }) => any} [execute] The execute function for the subcommand.
@@ -173,7 +173,7 @@ declare interface Subcommand {
 
 /**
  * @typedef Argument The argument (options) for the slash command.
- * @type {object} 
+ * @type {object}
  * @property {('STRING'|'INTEGER'|'BOOLEAN'|'USER'|'CHANNEL'|'ROLE'|'MENTIONABLE'|'NUMBER')} type The type of option for the slash command.
  * @property {string} name The name for the argument (this needs to be unique for each argument, no spaces!).
  * @property {string} description The description for the argument.
@@ -190,7 +190,7 @@ declare interface Argument {
 
 /**
  * @typedef Choice The custom choice for the argument.
- * @type {object} 
+ * @type {object}
  * @property {string} name The name of the choice (this needs to be unique for each chouce, no spaces!).
  * @property {string|number} value The custom value that the choice will return upon interaction (this needs to be unique for each chouce, no spaces!).
  */

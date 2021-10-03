@@ -19,14 +19,14 @@ export default class Eval extends Command {
                     type: 'STRING',
                     required: true
                 }
-            ],
+            ]
         });
     }
 
-    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }) {
+    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> {
         /* Fetching the code to eval */
         let code = interaction.options.getString('code', true);
-        code = code.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+        code = code.replace(/[“”]/g, '"').replace(/[‘’]/g, '\'');
         let evaled;
 
         try {
@@ -39,7 +39,7 @@ export default class Eval extends Command {
 
             /* Stopping the eval time and initiatng the result */
             const stop = process.hrtime(start);
-            const res = `**Output:** \`\`\`js\n${clean(client, inspect(evaled, { depth: 0 }))}\n\`\`\`\n**Time Taken:** \`\`\`${(((stop[0] * 1e9) + stop[1])) / 1e6}ms\`\`\``
+            const res = `**Output:** \`\`\`js\n${clean(client, inspect(evaled, { depth: 0 }))}\n\`\`\`\n**Time Taken:** \`\`\`${(((stop[0] * 1e9) + stop[1])) / 1e6}ms\`\`\``;
 
             /* Sending the result, if it's chars are more than 2k, create an attachment */
             if (res.length < 2000) await interaction.reply({ content: res, ephemeral: true });

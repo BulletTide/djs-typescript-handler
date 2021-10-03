@@ -11,7 +11,7 @@ export default class Template extends Command {
         });
     }
 
-    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }) {
+    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> {
         /* Returning the ping */
         await client.utils.quickSuccess(interaction, `**Websocket Ping:** ${client.ws.ping}ms.`);
     }

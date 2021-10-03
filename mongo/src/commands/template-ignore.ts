@@ -11,6 +11,6 @@ export default class Template extends Command {
     }
 
     async execute ({ client, interaction, group, subcommand }: { client: Client, interaction: CommandInteraction, group: string, subcommand: string }) {
-        // 
+        //
     }
 }

@@ -6,9 +6,8 @@
           the main repo.
 */
 
-import { CommandInteraction, GuildChannel, GuildMember, Message, MessageEmbed, MessageReaction, PermissionString, ReactionCollector, TextChannel, User, Guild, ThreadChannel, Interaction } from 'discord.js';
+import { CommandInteraction, GuildChannel, GuildMember, Message, MessageEmbed, MessageReaction, PermissionString, ReactionCollector, TextChannel, User, Guild, ThreadChannel } from 'discord.js';
 import { Client } from '../src/utils/client';
-import { Command } from '../src/utils/command';
 
 const reactions = ['⏪', '◀️', '⏸️', '▶️', '⏩', '🔢'];
 const consoleColors = {
@@ -57,7 +56,7 @@ async function handleReaction ({ reaction, pageMsg, collector, pageIndex, embeds
 
 class HandlerUtils {
     client: Client;
-    
+
     constructor (client: Client) {
         this.client = client;
     }
@@ -74,7 +73,6 @@ class HandlerUtils {
 
         if (!channel && guild.rulesChannel) channel = guild.rulesChannel;
         else if (channel) return channel as TextChannel;
-        else return;
     }
 
     /**
@@ -82,7 +80,7 @@ class HandlerUtils {
      * @param {import('discord.js').CommandInteraction} interaction The interaction.
      * @param {string} message The error message.
      */
-    async quickError (interaction: CommandInteraction, message: string) {
+    async quickError (interaction: CommandInteraction, message: string): Promise<void> {
         try {
             await interaction.reply({ content: `${this.client.config.EMOTES.FAIL} ${message}`, ephemeral: true });
         } catch (e) {
@@ -95,7 +93,7 @@ class HandlerUtils {
      * @param {import('discord.js').CommandInteraction} interaction The interaction.
      * @param {string} message The error message.
      */
-     async quickSuccess (interaction: CommandInteraction, message: string) {
+    async quickSuccess (interaction: CommandInteraction, message: string): Promise<void> {
         try {
             await interaction.reply({ content: `${this.client.config.EMOTES.SUCCESS} ${message}` });
         } catch (e) {
@@ -111,7 +109,7 @@ class HandlerUtils {
      * @param {number} [options.time] The max time for createReactionCollector after which all of the reactions disappear
      * @example Examples can be seen in `src/utils/utils.md`
      */
-    async paginate (message: Message, embeds: MessageEmbed[], options?: { time?: number }) {
+    async paginate (message: Message, embeds: MessageEmbed[], options?: { time?: number }): Promise<void> {
         try {
             const pageMsg = await message.channel.send({ embeds: [embeds[0]] });
 
@@ -125,7 +123,7 @@ class HandlerUtils {
 
             if (options) {
                 if (options.time) time = options.time;
-            };
+            }
 
             const collector = pageMsg.createReactionCollector({ filter: (reaction, user) => reactions.includes(reaction.emoji.name!) && user.id === message.author.id, time });
             collector.on('collect', async (reaction) => {
@@ -152,7 +150,7 @@ class HandlerUtils {
      * Function to await a reply from a specific user.
      * @param {import('discord.js').Message} message The message to listen to
      * @param {object} [options] Optional parameters
-     * @param {number} [options.time] The max time for awaitMessages 
+     * @param {number} [options.time] The max time for awaitMessages
      * @param {import('discord.js').User} [options.user] The user to listen to messages to
      * @param {string[]} [options.words] Optional accepted words, will aceept any word if not provided
      * @param {RegExp} [options.regexp] Optional RegExp to accept user input that matches the RegExp
@@ -173,13 +171,13 @@ class HandlerUtils {
         const filter = (msg: Message): boolean => {
             return msg.author.id === user.id
                 && (words.length === 0 || words.includes(msg.content.toLowerCase()))
-                && (!options || !options.regexp || options.regexp.test(msg.content))
-        }
+                && (!options || !options.regexp || options.regexp.test(msg.content));
+        };
 
         const msgs = await message.channel.awaitMessages({ filter, max: 1, time });
 
         if (msgs.size > 0) return msgs.first();
-        return;
+
     }
 
     /**
@@ -212,7 +210,7 @@ class HandlerUtils {
     missingPermissions (member: GuildMember, perms: PermissionString[]): string {
         const missingPerms = member.permissions.missing(perms)
             .map(str => `\`${str.replace(/_/g, ' ').toLowerCase().replace(/\b(\w)/g, char => char.toUpperCase())}\``);
-    
+
         return missingPerms.length > 1 ?
             `${missingPerms.slice(0, -1).join( ',  ')} and ${missingPerms.slice(-1)[0]}` :
             missingPerms[0];
@@ -224,8 +222,8 @@ class HandlerUtils {
      * @param {string} path The path where the console log is coming from
      * @param {string} text The message to be displayed
      */
-    log (type: 'SUCCESS'|'WARNING'|'ERROR', path: string, text: string) {
-        console.log(`\u001b[36;1m<bot-prefab>\u001b[0m\u001b[34m [${path}]\u001b[0m - ${consoleColors[type]}${text}\u001b[0m`);
+    log (type: 'SUCCESS'|'WARNING'|'ERROR', path: string, text: string): void {
+        console.log(`\u001b[36;1m<${this.client.user?.username || 'Loading...'}>\u001b[0m\u001b[34m [${path}]\u001b[0m - ${consoleColors[type]}${text}\u001b[0m`);
     }
 
     /**
@@ -235,15 +233,15 @@ class HandlerUtils {
      * @example let time = timeToMs('10s') -> 10000
      */
     timeToMs (timeStr: string): number | undefined {
-        let values = getUnitAndNumber(timeStr);
-        if (!values) return undefined;
+        const values = getUnitAndNumber(timeStr);
+        if (!values) return;
 
         let ms = 0;
         try {
             for (let i = 0; i < values.length; ++i) ms += getMs(values[i].numberPart, values[i].unit);
         } catch (e) {
-            return undefined;
-        };
+            return;
+        }
 
         return ms;
     }
@@ -261,18 +259,18 @@ class HandlerUtils {
      */
     msToTime (time: number, options: { format?: 'long'|'medium'|'short', spaces?: boolean, unitRounding?: number, joinString?: string } = {}): string | undefined {
         if (
-            options.format === undefined ||
+            !options.format ||
             (options.format !== 'short' && options.format !== 'medium' && options.format !== 'long')
         ) options.format = 'short';
 
-        if (options.spaces === undefined) options.spaces = false;
-        if (options.joinString === undefined) options.joinString = ' ';
+        if (!options.spaces) options.spaces = false;
+        if (!options.joinString) options.joinString = ' ';
 
         let timeStr: string | undefined = '';
         let nr = 0;
 
         for (let i = Object.keys(timeUnitValues).length; i >= 0; --i) {
-            let key = Object.keys(timeUnitValues)[i];
+            const key = Object.keys(timeUnitValues)[i];
             if (key === 'a') continue;
 
             let ctime = time / timeUnitValues[key];
@@ -283,15 +281,15 @@ class HandlerUtils {
                 timeStr += ctime;
                 timeStr += options.spaces === true && options.format !== 'short' ? ' ' : '';
                 timeStr += fullTimeUnitNames[key][options.format] + (ctime !== 1 && options.format !== 'short' ? 's' : '');
-                    timeStr += options.spaces === true ? options.joinString : '';
+                timeStr += options.spaces === true ? options.joinString : '';
                 time -= ctime * timeUnitValues[key];
-            };
+            }
         }
 
         while (timeStr.endsWith(options.joinString)) timeStr = timeStr.slice(0, -1 * options.joinString.length);
 
         if (timeStr === '') return;
-        else return timeStr;
+        return timeStr;
     }
 }
 
@@ -309,7 +307,7 @@ const timeUnits: { [x: string]: string[] } = {
     a: ['julianyear(s)'],
     dec: ['decade(s)'],
     cen: ['cent(s)', 'century', 'centuries']
-}
+};
 
 const timeUnitValues: { [x: string]: number } = {
     ms: 1,
@@ -323,7 +321,7 @@ const timeUnitValues: { [x: string]: number } = {
     a: 1000 * 60 * 60 * 24 * 365.25,
     dec: 1000 * 60 * 60 * 24 * 365 * 10,
     cen: 1000 * 60 * 60 * 24 * 365 * 100
-}
+};
 
 const fullTimeUnitNames: { [x: string]: { [y: string]: string } } = {
     ms: { short: 'ms', medium: 'msec', long: 'millisecond' },
@@ -335,19 +333,19 @@ const fullTimeUnitNames: { [x: string]: { [y: string]: string } } = {
     mth: { short: 'mth', medium: 'mo', long: 'month' },
     y: { short: 'y', medium: 'yr', long: 'year' },
     dec: { short: 'dec', medium: 'dec', long: 'decade' },
-    cen: { short: 'cen', medium: 'cent', long: 'century' },
-}
+    cen: { short: 'cen', medium: 'cent', long: 'century' }
+};
 
 function getUnitAndNumber (timeString: string) {
     timeString = timeString.toLowerCase().replace(/ /g, '');
 
-    let unit = timeString.replace(/[0-9.,:]/g, ' ');
-    let numberPart = timeString
+    const unit = timeString.replace(/[0-9.,:]/g, ' ');
+    const numberPart = timeString
         .replace(/[^0-9.,:]/g, ' ')
         .replace(',', '.');
 
     let units = unit.split(' ').filter((str) => str !== '');
-    let numberParts = numberPart
+    const numberParts = numberPart
         .split(' ')
         .filter((str) => str !== '');
 
@@ -355,34 +353,34 @@ function getUnitAndNumber (timeString: string) {
 
     if (
         unit === '' ||
-        unit === undefined ||
+        !unit ||
         numberPart === '' ||
-        numberPart === undefined ||
-        units === undefined ||
+        !numberPart ||
+        !units ||
         units.length === 0 ||
         numberParts.length === 0 ||
         units.length !== numberParts.length
-    ) return undefined;
+    ) return;
 
-    let ans = [];
+    const ans = [];
     for (let i = 0; i < units.length; ++i)
         ans.push({
             numberPart: numberParts[i],
-            unit: units[i],
+            unit: units[i]
         });
     return ans;
 }
 
 function getExactUnits (thisUnits: string[]) {
-    let exactUnits = [];
+    const exactUnits = [];
 
-    for (let newUnit of thisUnits) {
-        if (timeUnits[newUnit] !== undefined) {
+    for (const newUnit of thisUnits) {
+        if (timeUnits[newUnit]) {
             exactUnits.push(newUnit);
             continue;
         } else {
-            for (let timeUnit in timeUnits) {
-                for (let timeUnitAllias of timeUnits[timeUnit]) {
+            for (const timeUnit in timeUnits) {
+                for (const timeUnitAllias of timeUnits[timeUnit]) {
                     if (timeUnitAllias.replace('(s)', '') === newUnit
                      || timeUnitAllias.replace('(s)', 's') === newUnit) {
                         exactUnits.push(timeUnit);
@@ -401,18 +399,18 @@ function getExactUnits (thisUnits: string[]) {
 function getMs (number: string, unit: string) {
     if (number.includes(':')) {
         switch (unit) {
-            case 'min':
-                return (
-                    Number(number.split(':')[0]) * timeUnitValues['min'] +
-                    Number(number.split(':')[1]) * timeUnitValues['s']
-                );
-            case 'h':
-                return (
-                    Number(number.split(':')[0]) * timeUnitValues['h'] +
-                    Number(number.split(':')[1]) * timeUnitValues['min']
-                );
-            default:
-                throw new Error('Used \':\' with a unit which doesn\'t support it');
+        case 'min':
+            return (
+                Number(number.split(':')[0]) * timeUnitValues.min +
+                    Number(number.split(':')[1]) * timeUnitValues.s
+            );
+        case 'h':
+            return (
+                Number(number.split(':')[0]) * timeUnitValues.h +
+                    Number(number.split(':')[1]) * timeUnitValues.min
+            );
+        default:
+            throw new Error('Used \':\' with a unit which doesn\'t support it');
         }
     }
 

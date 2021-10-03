@@ -9,12 +9,12 @@
 import { Guild, Interaction, GuildMember } from 'discord.js';
 import { Client } from '../src/utils/client';
 
-async function guildCreate (client: Client, guild: Guild) {
+async function guildCreate (client: Client, guild: Guild): Promise<void> {
     try {
         if (guild.available) {
             const channel = client.utils.getDefaultChannel(guild);
             if (!channel) return;
-    
+
             await channel.send('Thanks for adding me! For a list of commands, use `/help`!');
         }
     } catch (e) {
@@ -22,7 +22,7 @@ async function guildCreate (client: Client, guild: Guild) {
     }
 }
 
-async function interactionCreate (client: Client, interaction: Interaction) {
+async function interactionCreate (client: Client, interaction: Interaction): Promise<void> {
     try {
         if (interaction.isCommand()) {
             const command = client.commands.get(interaction.commandName);
@@ -44,7 +44,7 @@ async function interactionCreate (client: Client, interaction: Interaction) {
                     if (command.perms && !member.permissions.has(command.perms, true)) return await client.utils.quickError(interaction, `You are missing the following permissions: ${client.utils.missingPermissions(member, command.perms)}.`);
 
                     // @ts-ignore
-                    if (command.nsfw && !channel!.isVoice() && channel!.type !== 'GUILD_CATEGORY' &&!channel!.nsfw) return await client.utils.quickError(interaction, 'This command can only be used in a NSFW channel.')
+                    if (command.nsfw && !channel!.isVoice() && channel!.type !== 'GUILD_CATEGORY' && !channel!.nsfw) return await client.utils.quickError(interaction, 'This command can only be used in a NSFW channel.');
                 }
             }
 
@@ -58,7 +58,7 @@ async function interactionCreate (client: Client, interaction: Interaction) {
 
                 if (sub && sub.execute) return await sub.execute({ client, interaction, group, subcommand });
 
-                //@ts-ignore
+                // @ts-ignore
                 await command.execute({ client, interaction, group, subcommand });
             } catch (e) {
                 client.utils.log('ERROR', 'src/events/interaction/interactionCreate.js', `Error running command '${command.name}'`);
@@ -72,4 +72,4 @@ async function interactionCreate (client: Client, interaction: Interaction) {
 export {
     guildCreate,
     interactionCreate
-}
+};

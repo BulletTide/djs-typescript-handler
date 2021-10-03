@@ -3,6 +3,6 @@ declare interface Guild {
     handler: {
         commandPerms: any;
     };
-};
+}
 
 export { Guild };

@@ -6,7 +6,7 @@
           the main repo.
 */
 
-import { Client, ClientOptions, Collection, ColorResolvable, ApplicationCommandData } from 'discord.js';
+import { Client, ClientOptions, Collection, ApplicationCommandData } from 'discord.js';
 import { registerCommands, registerEvents } from './registry';
 import { Command } from '../src/utils/command';
 import { Utils } from '../src/utils/utils';
@@ -26,11 +26,11 @@ class HandlerClient extends Client {
 
         this.config = require('../config/config.json');
         this.languages = require('../config/languages.json');
-        
+
         this.utils = new Utils(this);
     }
 
-    async loadCommands () {
+    async loadCommands (): Promise<void> {
         if (!this.application?.owner) await this.application?.fetch();
 
         await registerCommands(this, '../src/commands');
@@ -49,19 +49,19 @@ class HandlerClient extends Client {
         for (const command of devOnly) {
             if (command.development) {
                 const guild = await this.guilds.fetch(this.config.DEV_SERVERS[0]);
-                await guild.commands.cache.find(c => c.name === command.name)!.permissions.set({ permissions: this.config.DEVS.map(id => { return { id, type: 'USER', permission: true } }) });
+                await guild.commands.cache.find(c => c.name === command.name)!.permissions.set({ permissions: this.config.DEVS.map(id => { return { id, type: 'USER', permission: true }; }) });
             }
         }
     }
 
-    async loadEvents () {
+    async loadEvents (): Promise<void> {
         await registerEvents(this, '../src/events');
     }
 
     /**
      * @param {string} token The bot token.
      */
-    async login (token?: string) {
+    async login (token?: string): Promise<string> {
         try {
             this.utils.log('WARNING', 'src/util/client.js', 'Loading events...');
             await this.loadEvents();
@@ -94,9 +94,9 @@ class HandlerClient extends Client {
 export { HandlerClient };
 
 /**
- * @param {Collection<string, import('../src/utils/command')>} collection 
- * @returns {import('discord.js').ApplicationCommandData[]} 
+ * @param {Collection<string, import('../src/utils/command')>} collection
+ * @returns {import('discord.js').ApplicationCommandData[]}
  */
 function toApplicationCommand (collection: Collection<string, Command>): ApplicationCommandData[] {
-    return collection.map(s => { return { name: s.name, description: s.description, options: s.options, defaultPermission: s.devOnly ? false : s.defaultPermission } });
+    return collection.map(s => { return { name: s.name, description: s.description, options: s.options, defaultPermission: s.devOnly ? false : s.defaultPermission }; });
 }

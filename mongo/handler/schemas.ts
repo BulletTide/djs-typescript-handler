@@ -6,18 +6,16 @@
           the main repo.
 */
 
-const handlerGuild = {
-    commandPerms: {}
-}
+const handlerGuild = { commandPerms: {} };
 
 const handlerProfile = {
     language: {
         default: 'english',
         type: String
     }
-}
+};
 
 export {
     handlerGuild,
     handlerProfile
-}
+};

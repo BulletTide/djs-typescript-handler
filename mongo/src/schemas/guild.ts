@@ -3,7 +3,7 @@ import { handlerGuild } from '../../handler/schemas';
 
 const guild = new Schema({
     _id: String,
-    handler: handlerGuild,
+    handler: handlerGuild
 
     /* You can add your own things after this */
 });
