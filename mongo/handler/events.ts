@@ -35,16 +35,17 @@ async function interactionCreate (client: Client, interaction: Interaction): Pro
                     const channel = await interaction.guild!.channels.fetch(interaction.channel!.id);
                     const member = await interaction.guild!.members.fetch(interaction.user.id);
 
-                    if (!interaction.inGuild()) return;
+                    if (!interaction.inGuild()) return await client.utils.quickError(interaction, 'This command can only be run in a server.');
 
-                    if (command.ownerOnly && interaction.guild!.ownerId !== interaction.user.id) return await client.utils.quickError(interaction, 'This command can only be used by the server owner.');
+                    if (channel) {
+                        if (command.ownerOnly && interaction.guild!.ownerId !== interaction.user.id) return await client.utils.quickError(interaction, 'This command can only be run by the server owner.');
 
-                    if (command.clientPerms && !channel!.permissionsFor(interaction.guild!.me as GuildMember).has(command.clientPerms, true)) return await client.utils.quickError(interaction, `I am missing the following permissions: ${client.utils.missingPermissions(interaction.guild!.me as GuildMember, command.clientPerms)}.`);
+                        if (command.clientPerms && !channel.permissionsFor(interaction.guild!.me as GuildMember).has(command.clientPerms, true)) return await client.utils.quickError(interaction, `I am missing the following permissions: ${client.utils.missingPermissions(interaction.guild!.me as GuildMember, command.clientPerms)}.`);
 
-                    if (command.perms && !member.permissions.has(command.perms, true)) return await client.utils.quickError(interaction, `You are missing the following permissions: ${client.utils.missingPermissions(member, command.perms)}.`);
+                        if (command.perms && !member.permissions.has(command.perms, true)) return await client.utils.quickError(interaction, `You are missing the following permissions: ${client.utils.missingPermissions(member, command.perms)}.`);
 
-                    // @ts-ignore
-                    if (command.nsfw && !channel!.isVoice() && channel!.type !== 'GUILD_CATEGORY' && !channel!.nsfw) return await client.utils.quickError(interaction, 'This command can only be used in a NSFW channel.');
+                        if (command.nsfw && channel.isText() && !channel.nsfw) return await client.utils.quickError(interaction, 'This command can only be run in a NSFW channel.');
+                    }
                 }
             }
 

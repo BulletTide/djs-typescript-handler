@@ -38,7 +38,7 @@ export default class Template extends Command {
         });
     }
 
-    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }) {
+    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> {
         // 
     }
 }
@@ -57,14 +57,14 @@ export default class Template extends Command {
                 command1: {
                     description: 'The description for the first sub command.',
                     
-                    execute: async ({ client, interaction }: { client: Client, interaction: CommandInteraction }) => {
+                    execute: async ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> => {
                         //
                     }
                 },
                 command2: {
                     description: 'The description for the first sub command.',
                     
-                    execute: async ({ client, interaction }: { client: Client, interaction: CommandInteraction }) => {
+                    execute: async ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> => {
                         //
                     }
                 }
