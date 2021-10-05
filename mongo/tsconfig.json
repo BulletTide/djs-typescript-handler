@@ -98,5 +98,5 @@
 		"skipLibCheck": true,                                /* Skip type checking all .d.ts files. */
     },
     "exclude": ["node_modules", "dist", "config/colors_example.json", "config/config_example.json"],
-    "include": ["config/*.json", "prefab", "src"]
+    "include": ["config/*.json", "prefab", "src", "handler/typings.d.ts"]
 }

@@ -13,7 +13,7 @@
   },
   "engines": {
     "node": ">=16.6.0",
-    "npm": ">=7.0.0"
+    "npm": ">=7.24.1"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/BulletTide/discordjs-v13-handlers#readme",
   "dependencies": {
-    "discord.js": "^13.2.0-dev.1633348990.00e1e26"
+    "discord.js": "^13.2.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.32.0",
