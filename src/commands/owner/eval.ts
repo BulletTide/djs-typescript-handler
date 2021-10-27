@@ -1,6 +1,6 @@
 import { CommandInteraction, MessageAttachment } from 'discord.js';
-import { Command } from '@command';
-import { Client } from '@client';
+import { Command } from '../../utils/command';
+import { Client } from '../../utils/client';
 import { inspect } from 'util';
 
 export default class Eval extends Command {

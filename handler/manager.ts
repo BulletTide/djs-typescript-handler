@@ -8,7 +8,7 @@
 
 import { Collection } from 'discord.js';
 import { EnforceDocument, FilterQuery, Model, QueryOptions, QueryWithHelpers, UpdateQuery, UpdateWriteOpResult } from 'mongoose';
-import { Client } from '@client';
+import { Client } from '../src/utils/client';
 
 class Manager <K, V> {
     _client: Client;

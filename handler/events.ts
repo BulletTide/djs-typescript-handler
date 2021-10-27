@@ -7,7 +7,7 @@
 */
 
 import { Guild, Interaction, GuildMember } from 'discord.js';
-import { Client } from '@client';
+import { Client } from '../src/utils/client';
 
 async function guildCreate (client: Client, guild: Guild): Promise<void> {
     try {

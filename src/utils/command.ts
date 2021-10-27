@@ -1,5 +1,5 @@
 import { HandlerCommand, CommandOptions } from '../../handler/command';
-import { Client } from '@client';
+import { Client } from '../../src/utils/client';
 
 class Command extends HandlerCommand {
     constructor(client: Client, options: CommandOptions) {

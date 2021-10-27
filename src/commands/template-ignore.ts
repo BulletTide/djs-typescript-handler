@@ -1,6 +1,6 @@
 import { CommandInteraction } from 'discord.js';
-import { Command } from '@command';
-import { Client } from '@client';
+import { Command } from '../../src/utils/command';
+import { Client } from '../../src/utils/client';
 
 export default class Template extends Command {
     constructor (client: Client) {

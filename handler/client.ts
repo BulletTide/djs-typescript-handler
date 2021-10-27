@@ -8,10 +8,10 @@
 
 import { Client, ClientOptions, Collection, ApplicationCommandData } from 'discord.js';
 import { registerCommands, registerEvents } from './registry';
-import { Command } from '@command';
+import { Command } from '../src/utils/command';
 import { Guild } from '../src/types/guild';
 import { Profile } from '../src/types/profile';
-import { Utils } from '@utils';
+import { Utils } from '../src/utils/utils';
 import { Manager } from './manager';
 import guildModel from '../src/schemas/guild';
 import profileModel from '../src/schemas/profile';
@@ -125,7 +125,7 @@ export { HandlerClient };
 
 /**
  * Converts a generated command to a JSON format valid for the discord API.
- * @param {Collection<string, import('@command')>} collection
+ * @param {Collection<string, Command>} collection
  * @returns {import('discord.js').ApplicationCommandData[]}
  */
 function toApplicationCommand (collection: Collection<string, Command>): ApplicationCommandData[] {

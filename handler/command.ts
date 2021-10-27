@@ -7,7 +7,7 @@
 */
 
 import { PermissionString, ApplicationCommandPermissionData, ApplicationCommandOptionData } from 'discord.js';
-import { Client } from '@client';
+import { Client } from '../src/utils/client';
 import { SubcommandGroup, Subcommand, CommandOptions } from './typings';
 
 class HandlerCommand {

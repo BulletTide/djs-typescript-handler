@@ -1,5 +1,5 @@
 import { Intents } from 'discord.js';
-import { Client } from '@client';
+import { Client } from '../src/utils/client';
 
 const client = new Client({
     intents: Object.values(Intents.FLAGS),

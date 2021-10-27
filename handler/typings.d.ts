@@ -7,7 +7,7 @@
 */
 
 import { PermissionString, ApplicationCommandPermissionData, CommandInteraction, ApplicationCommandOptionData } from 'discord.js';
-import { Client } from '@client';
+import { Client } from '../src/utils/client';
 
 export interface CommandOptions {
     name: string;

@@ -8,8 +8,8 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { Client } from '@client';
-import { Command } from '@command';
+import { Client } from '../src/utils/client';
+import { Command } from '../src/utils/command';
 
 async function registerCommands(client: Client, ...dirs: string[]): Promise<void> {
     for (const dir of dirs) {

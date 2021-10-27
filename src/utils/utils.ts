@@ -1,5 +1,5 @@
 import { HandlerUtils } from '../../handler/utils';
-import { Client } from '@client';
+import { Client } from '../../src/utils/client';
 
 class Utils extends HandlerUtils {
     constructor(client: Client) {

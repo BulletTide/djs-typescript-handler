@@ -7,7 +7,7 @@
 */
 
 import { CommandInteraction, GuildChannel, GuildMember, Message, PermissionString, TextChannel, User, Guild, ThreadChannel } from 'discord.js';
-import { Client } from '@client';
+import { Client } from '../src/utils/client';
 
 const consoleColors = {
     'SUCCESS': '\u001b[32m',
