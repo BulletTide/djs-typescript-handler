@@ -1,0 +1,12 @@
+import { Intents } from 'discord.js';
+import { Client } from '@client';
+
+const client = new Client({
+    intents: Object.values(Intents.FLAGS),
+    restTimeOffset: 0,
+    allowedMentions: { parse: ['users'] }
+});
+
+(async () => {
+    await client.login(client.config.TOKEN);
+})();
