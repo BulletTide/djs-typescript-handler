@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/BulletTide/discordjs-v13-handlers#readme",
   "dependencies": {
-    "discord.js": "^13.2.0",
+    "discord.js": "^13.3.1",
     "mongoose": "^5.13.7"
   },
   "devDependencies": {

@@ -33,16 +33,16 @@ async function interactionCreate (client: Client, interaction: Interaction): Pro
             const developers: string[] = client.config.DEVS;
 
             if (!developers.includes(interaction.user.id)) {
-                if (command.guildOnly) {
-                    const channel = await interaction.guild!.channels.fetch(interaction.channel!.id);
-                    const member = await interaction.guild!.members.fetch(interaction.user.id);
+                if (command.guildOnly && interaction.guild) {
+                    const channel = await interaction.guild.channels.fetch(interaction.channel!.id);
+                    const member = await interaction.guild.members.fetch(interaction.user.id);
 
                     if (!interaction.inGuild()) return await client.utils.quickError(interaction, 'This command can only be run in a server.');
 
                     if (channel) {
-                        if (command.ownerOnly && interaction.guild!.ownerId !== interaction.user.id) return await client.utils.quickError(interaction, 'This command can only be run by the server owner.');
+                        if (command.ownerOnly && interaction.guild.ownerId !== interaction.user.id) return await client.utils.quickError(interaction, 'This command can only be run by the server owner.');
 
-                        if (command.clientPerms && !channel.permissionsFor(interaction.guild!.me as GuildMember).has(command.clientPerms, true)) return await client.utils.quickError(interaction, `I am missing the following permissions: ${client.utils.missingPermissions(interaction.guild!.me as GuildMember, command.clientPerms)}.`);
+                        if (command.clientPerms && !channel.permissionsFor(interaction.guild.me as GuildMember).has(command.clientPerms, true)) return await client.utils.quickError(interaction, `I am missing the following permissions: ${client.utils.missingPermissions(interaction.guild.me as GuildMember, command.clientPerms)}.`);
 
                         if (command.perms && !member.permissions.has(command.perms, true)) return await client.utils.quickError(interaction, `You are missing the following permissions: ${client.utils.missingPermissions(member, command.perms)}.`);
 
