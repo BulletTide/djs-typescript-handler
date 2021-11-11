@@ -26,24 +26,6 @@
         "quotes": ["error", "single"],
         "semi": ["error", "always"],
 
-		// JSDoc linting.
-		"valid-jsdoc": ["off", {
-			"requireReturn": false,
-    		"requireReturnDescription": false,
-    		"preferType": {
-    			"String": "string",
-				"Number": "number",
-				"Boolean": "boolean",
-				"Function": "function",
-				"object": "Object",
-				"date": "Date",
-				"error": "Error"
-      		},
-			"prefer": {
-				"return": "returns"
-			}
-		}],
-
         // Other important rules.
         "no-loss-of-precision": "error",
 		"no-template-curly-in-string": "error",

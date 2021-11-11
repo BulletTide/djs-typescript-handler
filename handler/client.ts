@@ -125,8 +125,8 @@ export { HandlerClient };
 
 /**
  * Converts a generated command to a JSON format valid for the discord API.
- * @param {Collection<string, Command>} collection
- * @returns {import('discord.js').ApplicationCommandData[]}
+ * @param {Collection<string, Command>} collection The collection containing the localized client command(s).
+ * @returns {import('discord.js').ApplicationCommandData[]} A discord-accepted format of commands of which djs can push to the application.
  */
 function toApplicationCommand (collection: Collection<string, Command>): ApplicationCommandData[] {
     return collection.map(s => { return { name: s.name, description: s.description, options: s.options, defaultPermission: s.devOnly ? false : s.defaultPermission }; });
