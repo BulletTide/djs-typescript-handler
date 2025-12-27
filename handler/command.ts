@@ -137,44 +137,79 @@ function buildSubcommandOptions(
         name,
         description: sub.description,
         options: (sub.args ?? []).map(arg =>
-            buildArgumentOption(`${path}.${name}`, arg, autocomplete)
+            buildArgumentOption(arg, autocomplete)
         )
     }));
 }
 
 function buildArgumentOption(
-    path: string,
     arg: Argument,
     autocomplete: Map<string, Argument['autocomplete']>
 ): APIApplicationCommandBasicOption {
-    const base = {
+    const common = {
         name: arg.name,
         description: arg.description,
-        required: arg.required ?? false,
-        autocomplete: Boolean(arg.autocomplete)
+        required: arg.required ?? false
     };
 
-    if (arg.autocomplete) {
-        autocomplete.set(`${path}.${arg.name}`, arg.autocomplete);
+    const hasAutocomplete = typeof arg.autocomplete === 'function';
+
+    if (hasAutocomplete) {
+        autocomplete.set(arg.name, arg.autocomplete);
     }
 
     switch (arg.type) {
     case 'STRING':
-        return { ...base, type: ApplicationCommandOptionType.String };
+        return {
+            ...common,
+            type: ApplicationCommandOptionType.String,
+            autocomplete: hasAutocomplete
+        };
+
     case 'INTEGER':
-        return { ...base, type: ApplicationCommandOptionType.Integer };
+        return {
+            ...common,
+            type: ApplicationCommandOptionType.Integer,
+            autocomplete: hasAutocomplete
+        };
+
     case 'NUMBER':
-        return { ...base, type: ApplicationCommandOptionType.Number };
+        return {
+            ...common,
+            type: ApplicationCommandOptionType.Number,
+            autocomplete: hasAutocomplete
+        };
+
     case 'BOOLEAN':
-        return { ...base, type: ApplicationCommandOptionType.Boolean };
+        return {
+            ...common,
+            type: ApplicationCommandOptionType.Boolean
+        };
+
     case 'USER':
-        return { ...base, type: ApplicationCommandOptionType.User };
+        return {
+            ...common,
+            type: ApplicationCommandOptionType.User
+        };
+
     case 'CHANNEL':
-        return { ...base, type: ApplicationCommandOptionType.Channel };
+        return {
+            ...common,
+            type: ApplicationCommandOptionType.Channel
+        };
+
     case 'ROLE':
-        return { ...base, type: ApplicationCommandOptionType.Role };
+        return {
+            ...common,
+            type: ApplicationCommandOptionType.Role
+        };
+
     case 'MENTIONABLE':
-        return { ...base, type: ApplicationCommandOptionType.Mentionable };
+        return {
+            ...common,
+            type: ApplicationCommandOptionType.Mentionable
+        };
+
     default:
         throw new Error(`Unknown argument type: ${arg.type}`);
     }

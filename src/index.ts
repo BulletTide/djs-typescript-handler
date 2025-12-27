@@ -1,3 +1,8 @@
+/*
+    Author: Bullet_Tide.
+*/
+
+import 'dotenv/config';
 import { GatewayIntentBits } from 'discord.js';
 import { Client } from '../src/utils/client';
 
@@ -12,5 +17,5 @@ const client = new Client({
 });
 
 (async () => {
-    await client.login(client.config.TOKEN);
+    await client.start();
 })();

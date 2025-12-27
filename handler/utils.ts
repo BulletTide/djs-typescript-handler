@@ -18,9 +18,12 @@ import {
     PermissionsBitField,
     ChatInputCommandInteraction,
     UserContextMenuCommandInteraction,
-    MessageContextMenuCommandInteraction
+    MessageContextMenuCommandInteraction,
+    MessageFlags
 } from 'discord.js';
+
 import { Client } from '../src/utils/client';
+import emotes from '../src/config/emotes.json';
 
 type AnyInteraction =
     | ChatInputCommandInteraction
@@ -33,6 +36,10 @@ class HandlerUtils {
     constructor(client: Client) {
         this.client = client;
     }
+
+    /* --------------------------------------------- */
+    /* Messages                                      */
+    /* --------------------------------------------- */
 
     async getReply(
         message: Message,
@@ -81,14 +88,26 @@ class HandlerUtils {
         console.log(`[${type}] [${path}] ${text}`);
     }
 
+    /* --------------------------------------------- */
+    /* Interaction Helpers                           */
+    /* --------------------------------------------- */
+
     async quickError(
         interaction: AnyInteraction,
         message: string
     ): Promise<void> {
+        const content = `${emotes.FAIL ?? '❌'} ${message}`;
+
         if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: message, ephemeral: true });
+            await interaction.reply({
+                content,
+                flags: MessageFlags.Ephemeral
+            });
         } else {
-            await interaction.followUp({ content: message, ephemeral: true });
+            await interaction.followUp({
+                content,
+                flags: MessageFlags.Ephemeral
+            });
         }
     }
 
@@ -96,10 +115,12 @@ class HandlerUtils {
         interaction: AnyInteraction,
         message: string
     ): Promise<void> {
+        const content = `${emotes.SUCCESS ?? '✅'} ${message}`;
+
         if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: message });
+            await interaction.followUp({ content });
         } else {
-            await interaction.reply({ content: message });
+            await interaction.reply({ content });
         }
     }
 

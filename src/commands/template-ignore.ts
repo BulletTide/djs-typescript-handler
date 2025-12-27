@@ -1,4 +1,4 @@
-import { ApplicationCommandType } from 'discord.js';
+import { MessageFlags } from 'discord.js';
 import { Command } from '../../src/utils/command';
 import { Client } from '../../src/utils/client';
 import { CommandExecutionContext } from '../../handler/typings';
@@ -78,7 +78,7 @@ export default class Template extends Command {
         if (interaction.isChatInputCommand()) {
             await interaction.reply({
                 content: 'Template slash command executed',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             return;
         }
@@ -90,7 +90,7 @@ export default class Template extends Command {
         if (interaction.isUserContextMenuCommand()) {
             await interaction.reply({
                 content: `User ID: ${interaction.targetUser.id}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             return;
         }
@@ -102,7 +102,7 @@ export default class Template extends Command {
         if (interaction.isMessageContextMenuCommand()) {
             await interaction.reply({
                 content: `Message ID: ${interaction.targetMessage.id}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

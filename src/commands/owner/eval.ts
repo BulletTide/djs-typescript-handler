@@ -1,6 +1,7 @@
 import {
     AttachmentBuilder,
-    ApplicationCommandOptionType
+    ApplicationCommandOptionType,
+    MessageFlags
 } from 'discord.js';
 
 import { Command } from '../../utils/command';
@@ -50,7 +51,7 @@ export default class Eval extends Command {
             const result = `**Output:**\n\`\`\`js\n${output}\n\`\`\`\n**Time Taken:** \`${time}ms\``;
 
             if (result.length < 2000) {
-                await interaction.reply({ content: result, ephemeral: true });
+                await interaction.reply({ content: result, flags: MessageFlags.Ephemeral });
             } else {
                 const attachment = new AttachmentBuilder(
                     Buffer.from(result),
@@ -59,13 +60,13 @@ export default class Eval extends Command {
 
                 await interaction.reply({
                     files: [attachment],
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
         } catch (error) {
             await interaction.reply({
                 content: `**Error:**\n\`\`\`xl\n${clean(client, String(error))}\n\`\`\``,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

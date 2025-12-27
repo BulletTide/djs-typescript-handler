@@ -1,10 +1,10 @@
 {
   "name": "discordjs-v14-typescript-handler",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "A modern, production-ready TypeScript handler for discord.js v14",
   "main": "src/index.ts",
   "types": "handler/typings.d.ts",
-  "type": "module",
+  "type": "commonjs",
   "private": true,
   "author": "Bullet_Tide",
   "license": "MIT",
@@ -35,6 +35,7 @@
     "@types/node": "^25.0.3",
     "@typescript-eslint/eslint-plugin": "^8.50.1",
     "@typescript-eslint/parser": "^8.50.1",
+    "dotenv": "^17.2.3",
     "eslint": "^9.39.2",
     "pm2": "^5.4.3",
     "typescript": "^5.9.3"

@@ -32,32 +32,60 @@ export async function interactionCreate(
     /* --------------------------------------------- */
 
     if (interaction.isAutocomplete()) {
-        const command = client.commands.get(interaction.commandName);
-        if (!command) return;
-
-        const focused = interaction.options.getFocused(true);
-        const group = interaction.options.getSubcommandGroup(false);
-        const sub = interaction.options.getSubcommand(false);
-
-        const path = [
-            interaction.commandName,
-            group,
-            sub,
-            focused.name
-        ].filter(Boolean).join('.');
-
-        const handler = command.autocomplete.get(path);
-        if (!handler) return;
-
         try {
-            const choices = await handler({ client, interaction });
+            const command = client.commands.get(interaction.commandName);
+            if (!command) {
+                await interaction.respond([]);
+                return;
+            }
+
+            const focused = interaction.options.getFocused(true);
+            const group = interaction.options.getSubcommandGroup(false);
+            const sub = interaction.options.getSubcommand(false);
+
+            const fullPath = [
+                interaction.commandName,
+                group,
+                sub,
+                focused.name
+            ].filter(Boolean).join('.');
+
+            const handler =
+                command.autocomplete.get(fullPath) ??
+                command.autocomplete.get(focused.name);
+
+            if (!handler) {
+                await interaction.respond([]);
+                return;
+            }
+
+            const result = await Promise.resolve(
+                handler({ client, interaction })
+            );
+
+            const choices = Array.isArray(result)
+                ? result.slice(0, 25).map(choice => ({
+                    name: String(choice.name),
+                    value:
+                        typeof choice.value === 'number'
+                            ? choice.value
+                            : String(choice.value)
+                }))
+                : [];
+
             await interaction.respond(choices);
-        } catch (e) {
+        } catch (error) {
             client.utils.log(
                 'ERROR',
-                `autocomplete:${command.name}`,
-                String(e)
+                'autocomplete',
+                String(error)
             );
+
+            try {
+                await interaction.respond([]);
+            } catch {
+                // Discord already timed out — nothing else to do
+            }
         }
 
         return;
@@ -120,15 +148,34 @@ export async function interactionCreate(
     );
 
     /* --------------------------------------------- */
+    /* Subcommand Resolution                         */
+    /* --------------------------------------------- */
+
+    const group = interaction.isChatInputCommand()
+        ? interaction.options.getSubcommandGroup(false)
+        : null;
+
+    const sub = interaction.isChatInputCommand()
+        ? interaction.options.getSubcommand(false)
+        : null;
+
+    const executor =
+        group && command.groups
+            ? command.groups[group]?.subcommands[sub!]
+            : sub && command.subcommands
+                ? command.subcommands[sub]
+                : command;
+
+    /* --------------------------------------------- */
     /* Safe Execution                                */
     /* --------------------------------------------- */
 
     try {
-        await command.execute({
+        await executor?.execute?.({
             client,
             interaction,
-            group: null,
-            subcommand: null
+            group,
+            subcommand: sub
         });
     } catch (error) {
         client.utils.log(

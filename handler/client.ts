@@ -25,18 +25,7 @@ import { CooldownManager } from './cooldowns';
 import guildModel from '../src/schemas/guild';
 import profileModel from '../src/schemas/profile';
 import { Languages } from '../src/types/languages';
-
-/* --------------------------------------------- */
-/* Config Type                                   */
-/* --------------------------------------------- */
-
-interface BotConfig {
-    TOKEN: string;
-    MONGODB_URI: string;
-    DEVS: string[];
-    DEV_SERVERS: string[];
-    EMOTES: Record<string, string>;
-}
+import { env, EnvConfig } from '../src/config/env';
 
 /* --------------------------------------------- */
 /* Client                                        */
@@ -50,7 +39,7 @@ class HandlerClient extends Client {
     guildInfo: Manager<string, Document>;
     profileInfo: Manager<string, Document>;
 
-    config: BotConfig;
+    config: EnvConfig;
     languages: Languages;
     utils: Utils;
 
@@ -64,8 +53,8 @@ class HandlerClient extends Client {
         this.guildInfo = new Manager(this, guildModel);
         this.profileInfo = new Manager(this, profileModel);
 
-        this.config = require('../config/config.json') as BotConfig;
-        this.languages = require('../config/languages.json') as Languages;
+        this.config = env;
+        this.languages = require('../src/config/languages.json') as Languages;
 
         this.utils = new Utils(this);
     }
@@ -117,12 +106,12 @@ class HandlerClient extends Client {
         await registerEvents(this, '../src/events');
     }
 
-    async login(token: string): Promise<string> {
+    async start(): Promise<string> {
         if (this.config.MONGODB_URI) {
             await connect(this.config.MONGODB_URI);
         }
 
-        await super.login(token);
+        await super.login(this.config.TOKEN);
 
         await this.loadEvents();
         await this.loadCommands();
