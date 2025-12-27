@@ -5,12 +5,13 @@
 import {
     ApplicationCommandOptionData,
     PermissionResolvable,
-    ChatInputCommandInteraction
+    ChatInputCommandInteraction,
+    AutocompleteInteraction
 } from 'discord.js';
 import { Client } from '../src/utils/client';
 
 /* --------------------------------------------- */
-/* Shared Execution Context                      */
+/* Execution Contexts                            */
 /* --------------------------------------------- */
 
 export interface CommandExecutionContext {
@@ -18,6 +19,11 @@ export interface CommandExecutionContext {
     interaction: ChatInputCommandInteraction;
     group: string | null;
     subcommand: string | null;
+}
+
+export interface AutocompleteExecutionContext {
+    client: Client;
+    interaction: AutocompleteInteraction;
 }
 
 /* --------------------------------------------- */
@@ -57,7 +63,7 @@ export interface Subcommand {
 }
 
 /* --------------------------------------------- */
-/* Arguments                                     */
+/* Arguments & Autocomplete                      */
 /* --------------------------------------------- */
 
 export interface Argument {
@@ -74,6 +80,9 @@ export interface Argument {
     description: string;
     choices?: Choice[];
     required?: boolean;
+    autocomplete?: (
+        ctx: AutocompleteExecutionContext
+    ) => Promise<Choice[]> | Choice[];
 }
 
 export interface Choice {

@@ -34,6 +34,7 @@ class HandlerCommand {
     category: string;
 
     options: APIApplicationCommandOption[];
+    autocomplete: Map<string, Argument['autocomplete']>;
 
     development: boolean;
     devOnly: boolean;
@@ -68,12 +69,22 @@ class HandlerCommand {
         this.groups = opts.groups ?? null;
         this.subcommands = opts.subcommands ?? null;
 
+        this.autocomplete = new Map();
+
         if (opts.options?.length) {
             this.options = opts.options as APIApplicationCommandOption[];
         } else if (this.groups) {
-            this.options = buildGroupOptions(this.groups);
+            this.options = buildGroupOptions(
+                this.name,
+                this.groups,
+                this.autocomplete
+            );
         } else if (this.subcommands) {
-            this.options = buildSubcommandOptions(this.subcommands);
+            this.options = buildSubcommandOptions(
+                this.name,
+                this.subcommands,
+                this.autocomplete
+            );
         } else {
             this.options = [];
         }
@@ -87,33 +98,52 @@ export { HandlerCommand, CommandOptions };
 /* --------------------------------------------- */
 
 function buildGroupOptions(
-    groups: Record<string, SubcommandGroup>
+    commandName: string,
+    groups: Record<string, SubcommandGroup>,
+    autocomplete: Map<string, Argument['autocomplete']>
 ): APIApplicationCommandSubcommandGroupOption[] {
-    return Object.entries(groups).map(([name, group]) => ({
+    return Object.entries(groups).map(([groupName, group]) => ({
         type: ApplicationCommandOptionType.SubcommandGroup,
-        name,
+        name: groupName,
         description: group.description,
-        options: buildSubcommandOptions(group.subcommands)
+        options: buildSubcommandOptions(
+            `${commandName}.${groupName}`,
+            group.subcommands,
+            autocomplete
+        )
     }));
 }
 
 function buildSubcommandOptions(
-    subs: Record<string, Subcommand>
+    path: string,
+    subs: Record<string, Subcommand>,
+    autocomplete: Map<string, Argument['autocomplete']>
 ): APIApplicationCommandSubcommandOption[] {
     return Object.entries(subs).map(([name, sub]) => ({
         type: ApplicationCommandOptionType.Subcommand,
         name,
         description: sub.description,
-        options: (sub.args ?? []).map(buildArgumentOption) as APIApplicationCommandBasicOption[]
+        options: (sub.args ?? []).map(arg =>
+            buildArgumentOption(`${path}.${name}`, arg, autocomplete)
+        )
     }));
 }
 
-function buildArgumentOption(arg: Argument): APIApplicationCommandBasicOption {
+function buildArgumentOption(
+    path: string,
+    arg: Argument,
+    autocomplete: Map<string, Argument['autocomplete']>
+): APIApplicationCommandBasicOption {
     const base = {
         name: arg.name,
         description: arg.description,
-        required: arg.required ?? false
+        required: arg.required ?? false,
+        autocomplete: Boolean(arg.autocomplete)
     };
+
+    if (arg.autocomplete) {
+        autocomplete.set(`${path}.${arg.name}`, arg.autocomplete);
+    }
 
     switch (arg.type) {
     case 'STRING':

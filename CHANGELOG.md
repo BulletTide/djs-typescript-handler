@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.2.0] - 2025-12-27
+
+### ✨ Added
+- Inline slash command autocomplete support
+- Typed autocomplete execution context
+- Centralized autocomplete handler routing
+
+### 🚀 Changed
+- Updated command template to use unified execution context
+- Improved developer experience for command authors
+
+### 🛠 Fixes
+- Prevented autocomplete handler collisions across subcommands
+- Corrected autocomplete routing for grouped and nested commands
+
+---
+
 ## [2.1.0] - 2025-12-27
 
 ### 🚀 Changed
@@ -26,7 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Improved interaction safety and error handling
 
 ---
-
 
 ## [2.0.0] - 2025-12-27
 
@@ -65,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.0.0] - Initial Release
 
-### Added
+### ✨ Added
 - Initial TypeScript handler for discord.js v13
 - Command and event handler system
 - Optional MongoDB integration

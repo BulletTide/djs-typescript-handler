@@ -32,26 +32,86 @@ export async function interactionCreate(
     client: Client,
     interaction: Interaction
 ): Promise<void> {
+
+    /* --------------------------------------------- */
+    /* Autocomplete                                  */
+    /* --------------------------------------------- */
+
+    if (interaction.isAutocomplete()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
+
+        const focused = interaction.options.getFocused(true);
+        const group = interaction.options.getSubcommandGroup(false);
+        const sub = interaction.options.getSubcommand(false);
+
+        const path = [
+            interaction.commandName,
+            group,
+            sub,
+            focused.name
+        ]
+            .filter(Boolean)
+            .join('.');
+
+        const handler = command.autocomplete.get(path);
+        if (!handler) return;
+
+        try {
+            const choices = await handler({ client, interaction });
+            await interaction.respond(choices);
+        } catch (e) {
+            client.utils.log(
+                'ERROR',
+                `autocomplete:${command.name}`,
+                String(e)
+            );
+        }
+
+        return;
+    }
+
+    /* --------------------------------------------- */
+    /* Slash Commands                                */
+    /* --------------------------------------------- */
+
     if (!interaction.isChatInputCommand()) return;
 
     const i = interaction as ChatInputCommandInteraction;
     const command = client.commands.get(i.commandName);
     if (!command) return;
 
+    /* --------------------------------------------- */
+    /* Global Guards                                 */
+    /* --------------------------------------------- */
+
     if (command.guildOnly && !i.inGuild()) {
-        return client.utils.quickError(i, 'Server only command.');
+        return client.utils.quickError(
+            i,
+            'This command can only be used in a server.'
+        );
     }
 
     if (command.ownerOnly && !client.config.DEVS.includes(i.user.id)) {
-        return client.utils.quickError(i, 'Owner only command.');
+        return client.utils.quickError(
+            i,
+            'This command is restricted to the bot owner.'
+        );
     }
 
     if (
         command.devOnly &&
         (!i.inGuild() || !client.config.DEV_SERVERS.includes(i.guildId!))
     ) {
-        return client.utils.quickError(i, 'Development server only command.');
+        return client.utils.quickError(
+            i,
+            'This command can only be used in development servers.'
+        );
     }
+
+    /* --------------------------------------------- */
+    /* Guild Context Checks                          */
+    /* --------------------------------------------- */
 
     if (i.inGuild()) {
         const guild = i.guild!;
@@ -64,7 +124,10 @@ export async function interactionCreate(
             channel?.type === ChannelType.GuildText &&
             !channel.nsfw
         ) {
-            return client.utils.quickError(i, 'NSFW only.');
+            return client.utils.quickError(
+                i,
+                'This command can only be used in NSFW channels.'
+            );
         }
 
         if (
@@ -72,16 +135,26 @@ export async function interactionCreate(
             channel?.isTextBased() &&
             !channel.permissionsFor(me)?.has(command.clientPerms)
         ) {
-            return client.utils.quickError(i, 'Missing bot permissions.');
+            return client.utils.quickError(
+                i,
+                'I am missing the required permissions to run this command.'
+            );
         }
 
         if (
             command.perms.length &&
             !member.permissions.has(command.perms)
         ) {
-            return client.utils.quickError(i, 'Missing user permissions.');
+            return client.utils.quickError(
+                i,
+                'You do not have permission to use this command.'
+            );
         }
     }
+
+    /* --------------------------------------------- */
+    /* Subcommand Resolution                         */
+    /* --------------------------------------------- */
 
     const group = i.options.getSubcommandGroup(false);
     const sub = i.options.getSubcommand(false);
@@ -93,6 +166,10 @@ export async function interactionCreate(
                 ? command.subcommands[sub]
                 : null;
 
+    /* --------------------------------------------- */
+    /* Safe Execution                                */
+    /* --------------------------------------------- */
+
     try {
         await exec?.execute?.({
             client,
@@ -101,7 +178,15 @@ export async function interactionCreate(
             subcommand: sub
         });
     } catch (error) {
-        client.utils.log('ERROR', `command:${command.name}`, String(error));
-        await client.utils.quickError(i, 'Unexpected error occurred.');
+        client.utils.log(
+            'ERROR',
+            `command:${command.name}`,
+            String(error)
+        );
+
+        await client.utils.quickError(
+            i,
+            'An unexpected error occurred while executing this command.'
+        );
     }
 }

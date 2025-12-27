@@ -107,71 +107,102 @@ Commands support the following built-in flags:
 These flags are **fully enforced by the handler** and require no additional code.
 
 
-### Basic Command
+## Command Template
 
-    import { ChatInputCommandInteraction } from 'discord.js';
-    import { Command } from '../../utils/command';
-    import { Client } from '../../utils/client';
+All commands extend the base `Command` class and receive a shared execution context.
 
-    export default class Template extends Command {
-        constructor(client: Client) {
-            super(client, {
-                name: 'template',
-                description: 'This is a template command'
-            });
-        }
+```ts
+import { Command } from '../../src/utils/command';
+import { Client } from '../../src/utils/client';
+import { CommandExecutionContext } from '../../handler/typings';
 
-        async execute({
-            client,
-            interaction
-        }: {
-            client: Client;
-            interaction: ChatInputCommandInteraction;
-        }): Promise<void> {
-            //
-        }
+export default class Example extends Command {
+    constructor(client: Client) {
+        super(client, {
+            name: 'example',
+            description: 'Example command'
+        });
     }
+
+    async execute({ interaction }: CommandExecutionContext): Promise<void> {
+        await interaction.reply('Hello world');
+    }
+}
+```
 
 ---
 
 ### Subcommands
 
-    import { ChatInputCommandInteraction } from 'discord.js';
-    import { Command } from '../../utils/command';
-    import { Client } from '../../utils/client';
+```ts
+import { Command } from '../../src/utils/command';
+import { Client } from '../../src/utils/client';
+import { CommandExecutionContext } from '../../handler/typings';
 
-    export default class Example extends Command {
-        constructor(client: Client) {
-            super(client, {
-                name: 'example',
-                description: 'Example with subcommands',
-                subcommands: {
-                    one: {
-                        description: 'First subcommand',
-                        execute: async ({ interaction }) => {
-                            //
-                        }
-                    },
-                    two: {
-                        description: 'Second subcommand',
-                        execute: async ({ interaction }) => {
-                            //
-                        }
+export default class Example extends Command {
+    constructor(client: Client) {
+        super(client, {
+            name: 'example',
+            description: 'Example with subcommands',
+            subcommands: {
+                one: {
+                    description: 'First subcommand',
+                    execute: async ({ interaction }: CommandExecutionContext) => {
+                        await interaction.reply('Subcommand one');
+                    }
+                },
+                two: {
+                    description: 'Second subcommand',
+                    execute: async ({ interaction }: CommandExecutionContext) => {
+                        await interaction.reply('Subcommand two');
                     }
                 }
-            });
+            }
+        });
+    }
+}
+```
+
+---
+
+### Slash Command Autocomplete
+
+Autocomplete can be defined inline on an argument.
+
+```ts
+args: [
+    {
+        name: 'query',
+        type: 'STRING',
+        description: 'Search query',
+        autocomplete: async ({ interaction }) => {
+            const focused = interaction.options.getFocused();
+            return [
+                { name: `${focused} one`, value: `${focused}_1` },
+                { name: `${focused} two`, value: `${focused}_2` }
+            ];
         }
     }
+]
+```
+
+Notes
+- Autocomplete is optional
+- Fully typed
+- Automatically routed by the handler
+- No separate registry required
 
 ---
 
 ## Adding an Event
 
-    import { Client } from '../../utils/client';
+```ts
+import { Client } from '../../utils/client';
 
-    export default async (client: Client): Promise<void> => {
-        //
-    };
+export default async (client: Client): Promise<void> => {
+    //
+};
+```
 
 **Rules**
 - File name **must match the Discord event name**
@@ -232,11 +263,6 @@ MIT License
 You are free to use, modify, and distribute this project.
 
 ---
-
-## Credits
-
-Inspired by community Discord bot handler patterns
-
 
 ## Credits
 
