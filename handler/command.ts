@@ -1,9 +1,5 @@
 /*
     Author: Bullet_Tide.
-    Note: Please refrain from editing in this file.
-          Any changes made in this file could be
-          overwritten upon pulling any commits from
-          the main repo.
 */
 
 import {
@@ -19,28 +15,38 @@ import {
 } from 'discord-api-types/v10';
 
 import { Client } from '../src/utils/client';
-import { SubcommandGroup, Subcommand, CommandOptions, Argument } from './typings';
+import {
+    SubcommandGroup,
+    Subcommand,
+    CommandOptions,
+    Argument
+} from './typings';
+
+/* --------------------------------------------- */
+/* Base Command                                  */
+/* --------------------------------------------- */
 
 class HandlerCommand {
-    client!: Client;
-    name!: string;
-    description!: string;
-    category!: string;
+    client: Client;
 
-    options!: APIApplicationCommandOption[];
+    name: string;
+    description: string;
+    category: string;
 
-    development!: boolean;
-    devOnly!: boolean;
-    hideCommand!: boolean;
-    ownerOnly!: boolean;
-    guildOnly!: boolean;
-    nsfw!: boolean;
+    options: APIApplicationCommandOption[];
 
-    perms!: PermissionResolvable[];
-    clientPerms!: PermissionResolvable[];
+    development: boolean;
+    devOnly: boolean;
+    hideCommand: boolean;
+    ownerOnly: boolean;
+    guildOnly: boolean;
+    nsfw: boolean;
 
-    groups!: Record<string, SubcommandGroup> | null;
-    subcommands!: Record<string, Subcommand> | null;
+    perms: PermissionResolvable[];
+    clientPerms: PermissionResolvable[];
+
+    groups: Record<string, SubcommandGroup> | null;
+    subcommands: Record<string, Subcommand> | null;
 
     constructor(client: Client, opts: CommandOptions) {
         this.client = client;
@@ -77,7 +83,7 @@ class HandlerCommand {
 export { HandlerCommand, CommandOptions };
 
 /* --------------------------------------------- */
-/* Builders (API SAFE)                            */
+/* Builders                                      */
 /* --------------------------------------------- */
 
 function buildGroupOptions(
@@ -111,41 +117,21 @@ function buildArgumentOption(arg: Argument): APIApplicationCommandBasicOption {
 
     switch (arg.type) {
     case 'STRING':
-        return {
-            ...base,
-            type: ApplicationCommandOptionType.String,
-            ...(arg.choices ? { choices: arg.choices.map(c => ({ name: c.name, value: String(c.value) })) } : {})
-        };
-
+        return { ...base, type: ApplicationCommandOptionType.String };
     case 'INTEGER':
-        return {
-            ...base,
-            type: ApplicationCommandOptionType.Integer,
-            ...(arg.choices ? { choices: arg.choices.map(c => ({ name: c.name, value: Number(c.value) })) } : {})
-        };
-
+        return { ...base, type: ApplicationCommandOptionType.Integer };
     case 'NUMBER':
-        return {
-            ...base,
-            type: ApplicationCommandOptionType.Number,
-            ...(arg.choices ? { choices: arg.choices.map(c => ({ name: c.name, value: Number(c.value) })) } : {})
-        };
-
+        return { ...base, type: ApplicationCommandOptionType.Number };
     case 'BOOLEAN':
         return { ...base, type: ApplicationCommandOptionType.Boolean };
-
     case 'USER':
         return { ...base, type: ApplicationCommandOptionType.User };
-
     case 'CHANNEL':
         return { ...base, type: ApplicationCommandOptionType.Channel };
-
     case 'ROLE':
         return { ...base, type: ApplicationCommandOptionType.Role };
-
     case 'MENTIONABLE':
         return { ...base, type: ApplicationCommandOptionType.Mentionable };
-
     default:
         throw new Error(`Unknown argument type: ${arg.type}`);
     }

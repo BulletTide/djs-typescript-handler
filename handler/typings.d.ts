@@ -1,9 +1,5 @@
 /*
     Author: Bullet_Tide.
-    Note: Please refrain from editing in this file.
-          Any changes made in this file could be
-          overwritten upon pulling any commits from
-          the main repo.
 */
 
 import {
@@ -12,6 +8,21 @@ import {
     ChatInputCommandInteraction
 } from 'discord.js';
 import { Client } from '../src/utils/client';
+
+/* --------------------------------------------- */
+/* Shared Execution Context                      */
+/* --------------------------------------------- */
+
+export interface CommandExecutionContext {
+    client: Client;
+    interaction: ChatInputCommandInteraction;
+    group: string | null;
+    subcommand: string | null;
+}
+
+/* --------------------------------------------- */
+/* Command Options                               */
+/* --------------------------------------------- */
 
 export interface CommandOptions {
     name: string;
@@ -26,30 +37,28 @@ export interface CommandOptions {
     perms?: PermissionResolvable[];
     clientPerms?: PermissionResolvable[];
     nsfw?: boolean;
-    groups?: { [x: string]: SubcommandGroup } | null;
-    subcommands?: { [x: string]: Subcommand } | null;
+    groups?: Record<string, SubcommandGroup> | null;
+    subcommands?: Record<string, Subcommand> | null;
 }
+
+/* --------------------------------------------- */
+/* Subcommands                                   */
+/* --------------------------------------------- */
 
 export interface SubcommandGroup {
     description: string;
-    subcommands: { [x: string]: Subcommand };
+    subcommands: Record<string, Subcommand>;
 }
 
 export interface Subcommand {
     description: string;
     args?: Argument[];
-    execute? ({
-        client,
-        interaction,
-        group,
-        subcommand
-    }: {
-        client: Client;
-        interaction: ChatInputCommandInteraction;
-        group: string | null;
-        subcommand: string | null;
-    }): any;
+    execute?: (ctx: CommandExecutionContext) => Promise<void> | void;
 }
+
+/* --------------------------------------------- */
+/* Arguments                                     */
+/* --------------------------------------------- */
 
 export interface Argument {
     type:
@@ -65,23 +74,9 @@ export interface Argument {
     description: string;
     choices?: Choice[];
     required?: boolean;
-    channelTypes?: ChannelTypes[];
 }
 
 export interface Choice {
     name: string;
     value: string | number;
 }
-
-export type ChannelTypes =
-    | 'GUILD_TEXT'
-    | 'DM'
-    | 'GUILD_VOICE'
-    | 'GROUP_DM'
-    | 'GUILD_CATEGORY'
-    | 'GUILD_NEWS'
-    | 'GUILD_STORE'
-    | 'GUILD_NEWS_THREAD'
-    | 'GUILD_PUBLIC_THREAD'
-    | 'GUILD_PRIVATE_THREAD'
-    | 'GUILD_STAGE_VOICE';

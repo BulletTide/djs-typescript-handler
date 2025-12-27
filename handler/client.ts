@@ -1,9 +1,5 @@
 /*
     Author: Bullet_Tide.
-    Note: Please refrain from editing in this file.
-          Any changes made in this file could be
-          overwritten upon pulling any commits from
-          the main repo.
 */
 
 import {
@@ -22,6 +18,19 @@ import { Manager } from './manager';
 
 import guildModel from '../src/schemas/guild';
 import profileModel from '../src/schemas/profile';
+import { Languages } from '../src/types/languages';
+
+/* --------------------------------------------- */
+/* Config Type                                   */
+/* --------------------------------------------- */
+
+interface BotConfig {
+    TOKEN: string;
+    MONGODB_URI: string;
+    DEVS: string[];
+    DEV_SERVERS: string[];
+    EMOTES: Record<string, string>;
+}
 
 /* --------------------------------------------- */
 /* Client                                        */
@@ -34,8 +43,8 @@ class HandlerClient extends Client {
     guildInfo: Manager<string, Document>;
     profileInfo: Manager<string, Document>;
 
-    config: typeof import('../config/config.json');
-    languages: Record<string, any>;
+    config: BotConfig;
+    languages: Languages;
     utils: Utils;
 
     constructor(options: ClientOptions) {
@@ -47,8 +56,8 @@ class HandlerClient extends Client {
         this.guildInfo = new Manager(this, guildModel);
         this.profileInfo = new Manager(this, profileModel);
 
-        this.config = require('../config/config.json');
-        this.languages = require('../config/languages.json');
+        this.config = require('../config/config.json') as BotConfig;
+        this.languages = require('../config/languages.json') as Languages;
 
         this.utils = new Utils(this);
     }
