@@ -1,9 +1,13 @@
-import { Intents } from 'discord.js';
+import { GatewayIntentBits } from 'discord.js';
 import { Client } from '../src/utils/client';
 
 const client = new Client({
-    intents: Object.values(Intents.FLAGS),
-    restTimeOffset: 0,
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ],
     allowedMentions: { parse: ['users'] }
 });
 

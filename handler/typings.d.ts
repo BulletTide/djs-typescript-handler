@@ -6,7 +6,11 @@
           the main repo.
 */
 
-import { PermissionString, ApplicationCommandPermissionData, CommandInteraction, ApplicationCommandOptionData } from 'discord.js';
+import {
+    ApplicationCommandOptionData,
+    PermissionResolvable,
+    ChatInputCommandInteraction
+} from 'discord.js';
 import { Client } from '../src/utils/client';
 
 export interface CommandOptions {
@@ -14,15 +18,13 @@ export interface CommandOptions {
     description: string;
     category?: string;
     options?: ApplicationCommandOptionData[];
-    defaultPermission?: boolean;
-    permissions?: ApplicationCommandPermissionData[]
     development?: boolean;
     devOnly?: boolean;
     hideCommand?: boolean;
     ownerOnly?: boolean;
     guildOnly?: boolean;
-    perms?: PermissionString[];
-    clientPerms?: PermissionString[];
+    perms?: PermissionResolvable[];
+    clientPerms?: PermissionResolvable[];
     nsfw?: boolean;
     groups?: { [x: string]: SubcommandGroup } | null;
     subcommands?: { [x: string]: Subcommand } | null;
@@ -30,17 +32,35 @@ export interface CommandOptions {
 
 export interface SubcommandGroup {
     description: string;
-    subcommands: { [x: string]: Subcommand }
+    subcommands: { [x: string]: Subcommand };
 }
 
 export interface Subcommand {
     description: string;
     args?: Argument[];
-    execute? ({ client, interaction, group, subcommand }: { client: Client, interaction: CommandInteraction, group: string, subcommand: string }): any;
+    execute? ({
+        client,
+        interaction,
+        group,
+        subcommand
+    }: {
+        client: Client;
+        interaction: ChatInputCommandInteraction;
+        group: string | null;
+        subcommand: string | null;
+    }): any;
 }
 
 export interface Argument {
-    type: 'STRING'|'INTEGER'|'BOOLEAN'|'USER'|'CHANNEL'|'ROLE'|'MENTIONABLE'|'NUMBER';
+    type:
+        | 'STRING'
+        | 'INTEGER'
+        | 'BOOLEAN'
+        | 'USER'
+        | 'CHANNEL'
+        | 'ROLE'
+        | 'MENTIONABLE'
+        | 'NUMBER';
     name: string;
     description: string;
     choices?: Choice[];
@@ -50,7 +70,18 @@ export interface Argument {
 
 export interface Choice {
     name: string;
-    value: string|number;
+    value: string | number;
 }
 
-export type ChannelTypes = | 'GUILD_TEXT' | 'DM' | 'GUILD_VOICE' | 'GROUP_DM' | 'GUILD_CATEGORY' | 'GUILD_NEWS' | 'GUILD_STORE' | 'GUILD_NEWS_THREAD' | 'GUILD_PUBLIC_THREAD' | 'GUILD_PRIVATE_THREAD' | 'GUILD_STAGE_VOICE';
+export type ChannelTypes =
+    | 'GUILD_TEXT'
+    | 'DM'
+    | 'GUILD_VOICE'
+    | 'GROUP_DM'
+    | 'GUILD_CATEGORY'
+    | 'GUILD_NEWS'
+    | 'GUILD_STORE'
+    | 'GUILD_NEWS_THREAD'
+    | 'GUILD_PUBLIC_THREAD'
+    | 'GUILD_PRIVATE_THREAD'
+    | 'GUILD_STAGE_VOICE';

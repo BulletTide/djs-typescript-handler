@@ -1,97 +1,229 @@
-# About
+# Discord.js v14 TypeScript Handler
 
-Welcome, this is a powerful **TypeScript** handler available for [discord.js v13](https://www.npmjs.com/package/discord.js "https://www.npmjs.com/package/discord.js"). The aim of this handler is to allow developers to skip the tedious process of having to create a handler for their project(s). The process of doing this is redundant and takes unecessary time. With that in mind, the handlers offer:
+## About
 
-- Easy set up, everything is documented.
-- Basic handler without mongo & advanced handler with mongo.
-- Very performant & clean code.
-- 100% coverage of the Discord API.
+Welcome! This is a powerful, modern **TypeScript handler** built for **discord.js v14**.  
+The goal of this project is to eliminate the repetitive and time-consuming process of writing a Discord bot handler from scratch, while still giving developers full control and flexibility.
+
+This handler is designed to be:
+- Clean, performant, and scalable
+- Fully aligned with Discord.js v14 standards
+- Friendly for both small bots and large projects
+
+### Features
+- ⚡ Automatic command & event loading
+- 🧠 Optional MongoDB support with a generic manager
+- 🧩 Support for subcommands & subcommand groups
+- 🛠️ Strict TypeScript typing
+- 🚀 Development vs production command separation
+- 📦 ESLint + TypeScript ready
+- 🔒 Slash-command–only (Discord compliant)
+
+---
+
+## Requirements
+
+- **Node.js 18.0.0 or newer**
+- **npm 9.0.0 or newer**
+- **discord.js v14**
+- **TypeScript v5+**
+
+> MongoDB is **optional** and only required if you use database features.
+
+---
 
 ## Installation
 
-**Node.js 16.6.0 & npm 7.0.0 or newer is required.**  
+    npm install
 
-```sh-session
-npm install -y
-```
+---
 
-## Usage
-### Configuration
-1. Go to the `src/config` folder.
-2. Input the respective config options.
-3. Add your Discord User ID in the `DEVS` array.
-4. Add your Support/Test Server ID in the `DEV_SERVERS` array.
-5. Optional: Add your own emotes in the `EMOTES` object.
-6. Optional: Add your MongoDB URI. This step is only needed if you are not using the basic handler(s).
+## Project Structure
 
-### Adding a command
-```ts
-import { CommandInteraction } from 'discord.js';
-import { Command } from '../../utils/command';
-import { Client } from '../../utils/client';
+    src/
+    ├── commands/           # Slash commands
+    │   ├── default/
+    │   └── owner/
+    ├── events/             # Discord events
+    ├── utils/              # Client, Command, Utils
+    ├── config/             # Configuration & languages
+    ├── schemas/            # Mongoose schemas (optional)
+    ├── types/              # Shared TypeScript types
+    └── index.ts            # Entry point
 
-export default class Template extends Command {
-    constructor (client: Client) {
-        super(client, {
-            name: 'template',
-            description: 'This is a template'
-        });
+    handler/
+    ├── client.ts           # Extended Discord client
+    ├── command.ts          # Command builder
+    ├── events.ts           # Shared event logic
+    ├── manager.ts          # MongoDB manager
+    ├── registry.ts         # Command/event loader
+    └── typings.d.ts        # Handler typings
+
+---
+
+## Configuration
+
+1. Navigate to `src/config`
+2. Fill in your bot configuration
+3. Add your Discord user ID(s) to `DEVS`
+4. Add development server IDs to `DEV_SERVERS`
+5. (Optional) Add a MongoDB URI if using database features
+
+---
+
+## Development vs Production
+
+Commands marked as:
+
+    development: true
+
+- Are registered **only** to servers listed in `DEV_SERVERS`
+- Update instantly
+
+Global commands:
+- Use `development: false`
+- May take up to **1 hour** to propagate
+
+**Recommended workflow**
+1. Develop commands using `development: true`
+2. Switch to `false` once stable
+
+---
+
+## Adding a Command
+
+### Basic Command
+
+    import { ChatInputCommandInteraction } from 'discord.js';
+    import { Command } from '../../utils/command';
+    import { Client } from '../../utils/client';
+
+    export default class Template extends Command {
+        constructor(client: Client) {
+            super(client, {
+                name: 'template',
+                description: 'This is a template command'
+            });
+        }
+
+        async execute({
+            client,
+            interaction
+        }: {
+            client: Client;
+            interaction: ChatInputCommandInteraction;
+        }): Promise<void> {
+            //
+        }
     }
 
-    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> {
-        // 
-    }
-}
-```
-```ts
-import { CommandInteraction } from 'discord.js';
-import { Command } from '../../utils/command';
-import { Client } from '../../utils/client';
+---
 
-export default class Template extends Command {
-    constructor (client: Client) {
-        super(client, {
-            name: 'template',
-            description: 'This is a template',
-            subcommands: {
-                command1: {
-                    description: 'The description for the first sub command.',
-                    
-                    execute: async ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> => {
-                        //
-                    }
-                },
-                command2: {
-                    description: 'The description for the first sub command.',
-                    
-                    execute: async ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> => {
-                        //
+### Subcommands
+
+    import { ChatInputCommandInteraction } from 'discord.js';
+    import { Command } from '../../utils/command';
+    import { Client } from '../../utils/client';
+
+    export default class Example extends Command {
+        constructor(client: Client) {
+            super(client, {
+                name: 'example',
+                description: 'Example with subcommands',
+                subcommands: {
+                    one: {
+                        description: 'First subcommand',
+                        execute: async ({ interaction }) => {
+                            //
+                        }
+                    },
+                    two: {
+                        description: 'Second subcommand',
+                        execute: async ({ interaction }) => {
+                            //
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
-}
-```
-1. Create your new command file, ending in the `.ts` file extension.
-2. Change the class name from "Template" to your command name.
-3. Change the command name to your new command name.
-4. Add a meaningful description for your new command.
-5. Voila! You can now add any new options.
-6. If you would like your command registered as a global command, set `development` to `false`.
 
-### Adding an event
-```ts
-import { Client } from '../../utils/client';
+---
 
-export default async (client: Client): Promise<void> => {
-    //
-};
-```
-1. Create your new event file, ending in the `.ts` file extension.
-    - **The file name needs to be the event name!**
-3. Add the necessary parameters.
-5. Voila! Your event is now added!
+## Adding an Event
+
+    import { Client } from '../../utils/client';
+
+    export default async (client: Client): Promise<void> => {
+        //
+    };
+
+**Rules**
+- File name **must match the Discord event name**
+- Events are auto-registered at startup
+
+---
+
+## Discord.js v14 Notes
+
+This project strictly follows Discord.js v14:
+
+- `MessageEmbed` → `EmbedBuilder`
+- `Intents` → `GatewayIntentBits`
+- `CommandInteraction` → `ChatInputCommandInteraction`
+- Permissions use `PermissionFlagsBits`
+- Slash commands only (no message commands)
+
+Older v13 code **will not work without migration**.
+
+---
+
+## Environment Variables (Optional)
+
+    TOKEN=your-bot-token
+    MONGODB_URI=mongodb://localhost:27017/bot
+
+These can override values in `config.json`.
+
+---
+
+## FAQ
+
+### Commands not showing up?
+- Ensure the bot has the `applications.commands` scope
+- Verify `DEV_SERVERS` is configured
+- Restart the bot after changes
+
+### MongoDB required?
+No. Database features are optional.
+
+### ESLint errors in template files?
+Template files are ignored automatically.
+
+---
+
+## Contributing
+
+- Follow existing project structure
+- Use Discord.js v14 APIs only
+- All changes must pass `tsc` and `eslint`
+- Keep the handler framework-agnostic
+
+---
+
+## License
+
+MIT License  
+You are free to use, modify, and distribute this project.
+
+---
 
 ## Credits
-- [Canta's bot-prefab-package](https://npmjs.org/package/bot-prefab-package "https://npmjs.org/package/bot-prefab-package").
+
+Inspired by community Discord bot handler patterns
+
+
+## Credits
+
+Inspired by  
+[Canta’s bot-prefab-package](https://www.npmjs.com/package/bot-prefab-package)

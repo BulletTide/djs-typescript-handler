@@ -6,73 +6,92 @@
           the main repo.
 */
 
-import { Guild, Interaction, GuildMember } from 'discord.js';
+import {
+    Interaction,
+    GuildMember,
+    ChannelType,
+    Guild
+} from 'discord.js';
 import { Client } from '../src/utils/client';
 
-async function guildCreate (client: Client, guild: Guild): Promise<void> {
+export async function guildCreate(client: Client, guild: Guild): Promise<void> {
     try {
-        if (guild.available) {
-            await client.guildInfo.get(guild.id);
+        if (!guild.available) return;
 
-            const channel = client.utils.getDefaultChannel(guild);
-            if (!channel) return;
+        await client.guildInfo.get(guild.id);
 
-            await channel.send('Thanks for adding me! For a list of commands, use `/help`!');
-        }
+        const channel = client.utils.getDefaultChannel(guild);
+        if (!channel) return;
+
+        await channel.send(
+            'Thanks for adding me! For a list of commands, use `/help`!'
+        );
     } catch (e) {
-        client.utils.log('ERROR', 'src/events/guild/guildCreate.js', `${e}`);
+        client.utils.log(
+            'ERROR',
+            'handler/events.ts',
+            String(e)
+        );
     }
 }
 
-async function interactionCreate (client: Client, interaction: Interaction): Promise<void> {
-    try {
-        if (interaction.isCommand()) {
-            const command = client.commands.get(interaction.commandName);
-            if (!command) return;
+export async function interactionCreate(
+    client: Client,
+    interaction: Interaction
+): Promise<void> {
+    if (!interaction.isChatInputCommand()) return;
 
-            const developers: string[] = client.config.DEVS;
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
 
-            if (!developers.includes(interaction.user.id)) {
-                if (command.guildOnly && interaction.guild) {
-                    const channel = await interaction.guild.channels.fetch(interaction.channel!.id);
-                    const member = await interaction.guild.members.fetch(interaction.user.id);
-
-                    if (!interaction.inGuild()) return await client.utils.quickError(interaction, 'This command can only be run in a server.');
-
-                    if (channel) {
-                        if (command.ownerOnly && interaction.guild.ownerId !== interaction.user.id) return await client.utils.quickError(interaction, 'This command can only be run by the server owner.');
-
-                        if (command.clientPerms && !channel.permissionsFor(interaction.guild.me as GuildMember).has(command.clientPerms, true)) return await client.utils.quickError(interaction, `I am missing the following permissions: ${client.utils.missingPermissions(interaction.guild.me as GuildMember, command.clientPerms)}.`);
-
-                        if (command.perms && !member.permissions.has(command.perms, true)) return await client.utils.quickError(interaction, `You are missing the following permissions: ${client.utils.missingPermissions(member, command.perms)}.`);
-
-                        if (command.nsfw && channel.isText() && !channel.nsfw) return await client.utils.quickError(interaction, 'This command can only be run in a NSFW channel.');
-                    }
-                }
-            }
-
-            const group = interaction.options.getSubcommandGroup(false)!;
-            const subcommand = interaction.options.getSubcommand(false)!;
-
-            try {
-                let sub;
-                if (command.groups) sub = command.groups[group].subcommands[subcommand];
-                else if (command.subcommands) sub = command.subcommands[subcommand];
-
-                if (sub && sub.execute) return await sub.execute({ client, interaction, group, subcommand });
-
-                // @ts-ignore
-                await command.execute({ client, interaction, group, subcommand });
-            } catch (e) {
-                client.utils.log('ERROR', 'src/events/interaction/interactionCreate.js', `Error running command '${command.name}'`);
-            }
-        }
-    } catch (e) {
-        client.utils.log('ERROR', 'src/events/interaction/interactionCreate.js', `${e}`);
+    if (command.guildOnly && !interaction.inGuild()) {
+        return client.utils.quickError(interaction, 'Server only command.');
     }
-}
 
-export {
-    guildCreate,
-    interactionCreate
-};
+    if (interaction.inGuild()) {
+        const guild = interaction.guild!;
+        const member = await guild.members.fetch(interaction.user.id);
+        const me = guild.members.me as GuildMember;
+        const channel = await guild.channels.fetch(interaction.channelId);
+
+        if (
+            command.nsfw &&
+            channel?.type === ChannelType.GuildText &&
+            !channel.nsfw
+        ) {
+            return client.utils.quickError(interaction, 'NSFW only.');
+        }
+
+        if (
+            command.clientPerms.length &&
+            channel?.isTextBased() &&
+            !channel.permissionsFor(me)?.has(command.clientPerms)
+        ) {
+            return client.utils.quickError(interaction, 'Missing bot permissions.');
+        }
+
+        if (
+            command.perms.length &&
+            !member.permissions.has(command.perms)
+        ) {
+            return client.utils.quickError(interaction, 'Missing user permissions.');
+        }
+    }
+
+    const group = interaction.options.getSubcommandGroup(false);
+    const sub = interaction.options.getSubcommand(false);
+
+    const exec =
+        group && command.groups
+            ? command.groups[group]?.subcommands[sub!]
+            : sub && command.subcommands
+                ? command.subcommands[sub]
+                : null;
+
+    await exec?.execute?.({
+        client,
+        interaction,
+        group,
+        subcommand: sub
+    });
+}

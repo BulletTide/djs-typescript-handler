@@ -7,130 +7,174 @@
 */
 
 import { Collection } from 'discord.js';
-import { EnforceDocument, FilterQuery, Model, QueryOptions, QueryWithHelpers, UpdateQuery, UpdateWriteOpResult } from 'mongoose';
+import {
+    FilterQuery,
+    Model,
+    QueryOptions,
+    UpdateQuery,
+    Document
+} from 'mongoose';
 import { Client } from '../src/utils/client';
 
-class Manager <K, V> {
-    _client: Client;
-    _model: Model<V>
-    _cache: Collection<K, V>;
+class Manager<K, V extends Document> {
+    private _client: Client;
+    private _model: Model<V>;
+    private _cache: Collection<K, V>;
 
-    constructor (client: Client, model: Model<V>) {
+    constructor(client: Client, model: Model<V>) {
         this._client = client;
         this._model = model;
         this._cache = new Collection();
     }
 
-    async get (key: K, force?: boolean): Promise<V> {
+    async get(key: K, force = false): Promise<V> {
         let item = this._cache.get(key);
 
         if (!item || force) {
-            item = await this._model.findOneAndUpdate({ _id: key }, { }, { new: true, upsert: true, setDefaultsOnInsert: true });
-            this._cache.set(key, item);
+            item = await this._model
+                .findOneAndUpdate(
+                    { _id: key } as FilterQuery<V>,
+                    {},
+                    { new: true, upsert: true, setDefaultsOnInsert: true }
+                )
+                .exec();
+
+            this._cache.set(key, item!);
         }
 
+        return item!;
+    }
+
+    getCache(key: K): V | null {
+        return this._cache.get(key) ?? null;
+    }
+
+
+    async findById(key: K): Promise<V | null> {
+        return await this.findOne({ _id: key } as FilterQuery<V>);
+    }
+
+    async findOne(filter: FilterQuery<V>): Promise<V | null> {
+        const item = await this._model.findOne(filter).exec();
+        if (!item) return null;
+
+        this._cache.set(item._id as K, item);
         return item;
     }
 
-    getCache (key: K): V | undefined {
-        return this._cache.get(key);
-    }
+    async findMany(filter: FilterQuery<V>): Promise<V[]> {
+        const items = await this._model.find(filter).exec();
 
-    async findById (key: K): Promise<EnforceDocument<V, {}> | null | undefined> {
-        return await this.findOne({ _id: key });
-    }
-
-    async findOne (filter: FilterQuery<V>): Promise<QueryWithHelpers<EnforceDocument<V, {}> | null, EnforceDocument<V, {}>, {}, V> | null | undefined> {
-        const item = await this._model.findOne(filter);
-
-        if (!item) return;
-
-        this._cache.set(item._id, item);
-
-        return item;
-    }
-
-    async findMany (filter: FilterQuery<V>): Promise<EnforceDocument<V, {}>[]> {
-        const items = await this._model.find(filter);
-
-        for (const item of items) this._cache.set(item._id, item);
+        for (const item of items) {
+            this._cache.set(item._id as K, item);
+        }
 
         return items;
     }
 
-    async findByIdAndUpdate (key: K, update: UpdateQuery<V>, options?: QueryOptions): Promise<EnforceDocument<V, {}> | null | undefined> {
-        return await this.findOneAndUpdate({ _id: key }, update, options);
+    async findByIdAndUpdate(
+        key: K,
+        update: UpdateQuery<V>,
+        options?: QueryOptions
+    ): Promise<V | null> {
+        return await this.findOneAndUpdate(
+            { _id: key } as FilterQuery<V>,
+            update,
+            options
+        );
     }
 
-    async findOneAndUpdate (filter: FilterQuery<V>, update: UpdateQuery<V>, options?: QueryOptions): Promise<EnforceDocument<V, {}> | null | undefined> {
-        const item = await this._model.findOneAndUpdate(filter, update, options);
+    async findOneAndUpdate(
+        filter: FilterQuery<V>,
+        update: UpdateQuery<V>,
+        options?: QueryOptions
+    ): Promise<V | null> {
+        const item = await this._model
+            .findOneAndUpdate(filter, update, options)
+            .exec();
 
-        if (!item) return;
+        if (!item) return null;
 
-        this._cache.set(item._id, item);
-
+        this._cache.set(item._id as K, item);
         return item;
     }
 
-    async updateMany (filter: FilterQuery<V>, update: UpdateQuery<V>, options?: QueryOptions): Promise<UpdateWriteOpResult> {
-        const query = await this._model.updateMany(filter, update, options);
-
-        return query;
+    async updateMany(
+        filter: FilterQuery<V>,
+        update: UpdateQuery<V>,
+        options?: QueryOptions
+    ): Promise<void> {
+        await this._model.updateMany(filter, update, options).exec();
     }
 
-    async findByIdAndDelete (key: K, options?: QueryOptions): Promise<EnforceDocument<V, {}> | null | undefined> {
-        return await this.findOneAndDelete({ _id: key }, options);
+    async findByIdAndDelete(
+        key: K,
+        options?: QueryOptions
+    ): Promise<V | null> {
+        return await this.findOneAndDelete(
+            { _id: key } as FilterQuery<V>,
+            options
+        );
     }
 
-    async findOneAndDelete (filter: FilterQuery<V>, options?: QueryOptions): Promise<EnforceDocument<V, {}> | null | undefined> {
-        const item = await this._model.findOneAndDelete(filter, options);
+    async findOneAndDelete(
+        filter: FilterQuery<V>,
+        options?: QueryOptions
+    ): Promise<V | null> {
+        const item = await this._model
+            .findOneAndDelete(filter, options)
+            .exec();
 
-        if (!item) return;
+        if (!item) return null;
 
-        this._cache.delete(item._id);
-
+        this._cache.delete(item._id as K);
         return item;
     }
 
-    async deleteMany (filter: FilterQuery<V>, options?: QueryOptions): Promise<void> {
-        await this._model.deleteMany(filter, options);
+    async deleteMany(
+        filter: FilterQuery<V>,
+        options?: QueryOptions
+    ): Promise<void> {
+        await this._model.deleteMany(filter, options).exec();
     }
 
-    async insertOne (item: V): Promise<EnforceDocument<V, {}> | null | undefined> {
-        if (!item) return;
-
-        return (await this.insertMany([item]))![0];
+    async insertOne(item: V): Promise<V | null> {
+        if (!item) return null;
+        return (await this.insertMany([item]))?.[0] ?? null;
     }
 
-    async insertMany (items: V[]): Promise<EnforceDocument<V, {}>[] | null | undefined> {
-        if (!items || !items.length) return;
+    async insertMany(items: V[]): Promise<V[] | null> {
+        if (!items.length) return null;
 
-        const query = await this._model.insertMany(items);
+        const docs = await this._model.insertMany(items);
 
-        for (const item of query) this._cache.set(item._id, item);
+        for (const item of docs) {
+            this._cache.set(item._id as K, item);
+        }
 
-        return query;
+        return docs;
     }
 
-    async exists (key: K): Promise<boolean> {
+    async exists(key: K): Promise<boolean> {
         if (!key) return false;
 
-        let item: any = this._cache.get(key);
-
-        if (!item) item = await this.findOne({ _id: key }).catch(() => { /* */ });
+        let item: V | null | undefined = this._cache.get(key);
+        if (!item) {
+            item = await this.findOne({ _id: key } as FilterQuery<V>);
+        }
 
         return Boolean(item);
     }
 
-    async countItems (filter: FilterQuery<V>): Promise<number> {
-        return await this._model.countDocuments(filter);
+    async countItems(filter: FilterQuery<V>): Promise<number> {
+        return await this._model.countDocuments(filter).exec();
     }
 
-    get cache (): Collection<K, V> {
+    get cache(): Collection<K, V> {
         return this._cache;
     }
 
-    get model (): Model<V, {}, {}> {
+    get model(): Model<V> {
         return this._model;
     }
 }

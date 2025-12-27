@@ -1,70 +1,119 @@
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import {
+    ChatInputCommandInteraction,
+    EmbedBuilder,
+    ApplicationCommandOptionType,
+    PermissionFlagsBits
+} from 'discord.js';
+
 import { Command } from '../../utils/command';
 import { Client } from '../../utils/client';
 
 export default class Help extends Command {
-    constructor (client: Client) {
+    constructor(client: Client) {
         super(client, {
             name: 'help',
             description: 'Displays all helpful information on a command or lists all commands available in a category.',
             category: 'Misc',
-            clientPerms: ['SEND_MESSAGES', 'EMBED_LINKS'],
+            clientPerms: [
+                PermissionFlagsBits.SendMessages,
+                PermissionFlagsBits.EmbedLinks
+            ],
             options: [
                 {
                     name: 'name',
                     description: 'The category/command name you need help using.',
-                    type: 'STRING'
+                    type: ApplicationCommandOptionType.String,
+                    required: false
                 }
             ]
         });
     }
 
-    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> {
+    async execute({
+        client,
+        interaction
+    }: {
+        client: Client;
+        interaction: ChatInputCommandInteraction;
+    }): Promise<void> {
         const languageHelp = client.languages.help.names;
 
         const name = interaction.options.getString('name')?.toLowerCase();
-        if (!name) return defaultHelp(client, interaction, languageHelp);
+        if (!name) {
+            await defaultHelp(client, interaction, languageHelp);
+            return;
+        }
 
         const command = client.commands.get(name);
         const category = client.categories.get(name);
 
-        const embed = new MessageEmbed();
+        const embed = new EmbedBuilder();
 
-        // @ts-ignore
-        if (command && !command.hideCommand && !(command.nsfw && !interaction.channel.nsfw)) {
+        if (
+            command &&
+            !command.hideCommand &&
+            !(command.nsfw && interaction.channel &&
+                interaction.channel.isTextBased() &&
+                'nsfw' in interaction.channel &&
+                !interaction.channel.nsfw
+            )
+        ) {
             const commandHelp = client.languages[command.name];
 
-            embed.setAuthor(`${command.category ? command.category : languageHelp.noCategory} - ${command.name}`);
+            embed.setAuthor({ name: `${command.category ?? languageHelp.noCategory} - ${command.name}` });
 
-            if (commandHelp.description) embed.setDescription(commandHelp.description);
+            if (commandHelp?.description) {
+                embed.setDescription(commandHelp.description);
+            }
 
-            if (commandHelp.usage) embed.addField(languageHelp.usage, commandHelp.usage);
+            if (commandHelp?.usage) {
+                embed.addFields({
+                    name: languageHelp.usage,
+                    value: commandHelp.usage
+                });
+            }
 
-            if (commandHelp.examples) embed.addField(languageHelp.examples, commandHelp.examples);
+            if (commandHelp?.examples) {
+                embed.addFields({
+                    name: languageHelp.examples,
+                    value: commandHelp.examples
+                });
+            }
 
             await interaction.reply({ embeds: [embed] });
-        } else if (category) {
+        }
+        else if (category) {
             embed
                 .setTitle(category[0])
                 .setDescription(`\`${category.slice(1).join('`, `')}\``);
 
             await interaction.reply({ embeds: [embed] });
-        } else defaultHelp(client, interaction, languageHelp);
+        }
+        else {
+            await defaultHelp(client, interaction, languageHelp);
+        }
     }
 }
 
-/**
- *
- * @param {Client} client The client object.
- * @param {CommandInteraction} interaction The command interaction object.
- * @param {any} languageHelp
- */
-async function defaultHelp(client: Client, interaction: CommandInteraction, languageHelp: any) {
-    const embed = new MessageEmbed()
+/* --------------------------------------------- */
+/* Helpers                                       */
+/* --------------------------------------------- */
+
+async function defaultHelp(
+    client: Client,
+    interaction: ChatInputCommandInteraction,
+    languageHelp: any
+): Promise<void> {
+    const embed = new EmbedBuilder()
         .setTitle(languageHelp.commandCategories)
         .setDescription(languageHelp.categoriesHelp)
         .setThumbnail(client.user!.displayAvatarURL())
-        .addField(languageHelp.categoriesName, client.categories.map(c => `> ${languageHelp.categories[c[0]]}`).join('\n'));
+        .addFields({
+            name: languageHelp.categoriesName,
+            value: client.categories
+                .map(c => `> ${languageHelp.categories[c[0]]}`)
+                .join('\n')
+        });
 
     await interaction.reply({ embeds: [embed] });
 }

@@ -1,10 +1,15 @@
-import { CommandInteraction, MessageAttachment } from 'discord.js';
+import {
+    ChatInputCommandInteraction,
+    AttachmentBuilder,
+    ApplicationCommandOptionType
+} from 'discord.js';
+
 import { Command } from '../../utils/command';
 import { Client } from '../../utils/client';
 import { inspect } from 'util';
 
 export default class Eval extends Command {
-    constructor (client: Client) {
+    constructor(client: Client) {
         super(client, {
             name: 'eval',
             category: 'Owner',
@@ -16,50 +21,73 @@ export default class Eval extends Command {
                 {
                     name: 'code',
                     description: 'The code to eval, please note that a return needs to be specified.',
-                    type: 'STRING',
+                    type: ApplicationCommandOptionType.String,
                     required: true
                 }
             ]
         });
     }
 
-    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> {
-        /* Fetching the code to eval */
+    async execute({
+        client,
+        interaction
+    }: {
+        client: Client;
+        interaction: ChatInputCommandInteraction;
+    }): Promise<void> {
         let code = interaction.options.getString('code', true);
+
+        // normalize quotes
         code = code.replace(/[“”]/g, '"').replace(/[‘’]/g, '\'');
-        let evaled;
 
         try {
-            /* Getting the start eval time & making eval async */
             const start = process.hrtime();
-            evaled = eval(`(async () => { ${code} })();`);
 
-            /* Checking whether the eval returns a promise or not */
+            let evaled = eval(`(async () => { ${code} })();`);
             if (evaled instanceof Promise) evaled = await evaled;
 
-            /* Stopping the eval time and initiatng the result */
             const stop = process.hrtime(start);
-            const res = `**Output:** \`\`\`js\n${clean(client, inspect(evaled, { depth: 0 }))}\n\`\`\`\n**Time Taken:** \`\`\`${(((stop[0] * 1e9) + stop[1])) / 1e6}ms\`\`\``;
+            const time = (((stop[0] * 1e9) + stop[1]) / 1e6).toFixed(2);
 
-            /* Sending the result, if it's chars are more than 2k, create an attachment */
-            if (res.length < 2000) await interaction.reply({ content: res, ephemeral: true });
-            else {
-                const output = new MessageAttachment(Buffer.from(res), 'output.txt');
-                await interaction.reply({ files: [output], ephemeral: true });
+            const output = clean(
+                client,
+                inspect(evaled, { depth: 0 })
+            );
+
+            const result = `**Output:**\n\`\`\`js\n${output}\n\`\`\`\n**Time Taken:** \`${time}ms\``;
+
+            if (result.length < 2000) {
+                await interaction.reply({
+                    content: result,
+                    ephemeral: true
+                });
+            } else {
+                const attachment = new AttachmentBuilder(
+                    Buffer.from(result),
+                    { name: 'output.txt' }
+                );
+
+                await interaction.reply({
+                    files: [attachment],
+                    ephemeral: true
+                });
             }
-        } catch (e: any) {
-            await interaction.reply({ content: `**Error:** \`\`\`xl\n${clean(client, e)}\n\`\`\``, ephemeral: true });
+        } catch (error: any) {
+            await interaction.reply({
+                content: `**Error:**\n\`\`\`xl\n${clean(client, String(error))}\n\`\`\``,
+                ephemeral: true
+            });
         }
     }
 }
 
-function clean (client: Client, text: string) {
-    if (typeof text === 'string') {
-        text = text
-            .replace(/`/g, `\`${String.fromCharCode(8203)}`)
-            .replace(/@/g, `@${String.fromCharCode(8203)}`)
-            .replace(new RegExp(client.config.TOKEN, 'gi'), '****');
-    }
+/* --------------------------------------------- */
+/* Helpers                                       */
+/* --------------------------------------------- */
 
-    return text;
+function clean(client: Client, text: string): string {
+    return text
+        .replace(/`/g, `\`${String.fromCharCode(8203)}`)
+        .replace(/@/g, `@${String.fromCharCode(8203)}`)
+        .replace(new RegExp(client.config.TOKEN, 'gi'), '****');
 }
