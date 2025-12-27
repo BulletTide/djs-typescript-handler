@@ -2,24 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/).
+The format follows **Keep a Changelog**  
+https://keepachangelog.com/en/1.1.0/
+
+This project adheres to **Semantic Versioning**  
+https://semver.org/
+
+---
+
+## [2.4.0] - 2025-12-27
+
+### ✨ Added
+- Optional per-command cooldown system
+- User, guild, and global cooldown scopes
+- Unified cooldown handling for slash and context menu commands
+
+### 🚀 Changed
+- Updated command templates to reflect unified execution contract
+- Improved documentation for context menus and cooldowns
+
+### 🛠 Fixes
+- Ensured cooldown checks occur before command execution
+- Prevented duplicate command execution during cooldown windows
 
 ---
 
 ## [2.3.0] - 2025-12-27
 
 ### ✨ Added
-- Support for User and Message context menu commands
-- Unified command execution pipeline for slash and context menu commands
-- Typed execution context shared across all command types
+- User and Message context menu commands
+- Unified execution pipeline across all command types
+- Typed execution context shared across slash and context menu commands
 
 ### 🚀 Changed
 - Formalized command execution contract via abstract base method
 - Improved internal type safety and ESLint enforcement
 
 ### 🛠 Fixes
-- Correct command registration based on application command type
+- Correct command registration by application command type
 - Prevented invalid command payloads during registration
 
 ---
@@ -27,17 +47,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [2.2.0] - 2025-12-27
 
 ### ✨ Added
-- Inline slash command autocomplete support
+- Inline slash command autocomplete
 - Typed autocomplete execution context
-- Centralized autocomplete handler routing
+- Centralized autocomplete routing
 
 ### 🚀 Changed
-- Updated command template to use unified execution context
+- Updated command templates to use unified execution context
 - Improved developer experience for command authors
 
 ### 🛠 Fixes
-- Prevented autocomplete handler collisions across subcommands
-- Corrected autocomplete routing for grouped and nested commands
+- Prevented autocomplete collisions across subcommands
+- Fixed grouped autocomplete routing
 
 ---
 
@@ -45,60 +65,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### 🚀 Changed
 - Hardened command execution typing
-- Introduced a shared execution context for commands and subcommands
-- Centralized and improved config typing
-- Improved internal type safety without breaking existing commands
+- Introduced shared execution context
+- Centralized config typing
+- Improved internal type safety
 
 ---
 
 ## [2.0.1] - 2025-12-27
 
 ### 🛠 Fixes
-- Enforced `ownerOnly` and `devOnly` command flags
+- Enforced ownerOnly and devOnly flags
 - Added per-command execution error isolation
-- Prevented MongoDB connection when no URI is provided
-- Improved interaction safety and error handling
+- Prevented MongoDB connection without URI
+- Improved interaction safety
 
 ---
 
 ## [2.0.0] - 2025-12-27
 
 ### 🚀 Major Changes
-- Migrated entire codebase from **discord.js v13 → v14**
-- Refactored command, event, and client architecture to align with modern Discord.js standards
-- Reworked slash command handling to use Chat Input commands only
-- Updated permission handling to v14-compatible enums and flags
-- Updated intents, embeds, attachments, and interaction APIs
+- Migrated discord.js v13 → v14
+- Refactored command, event, and client architecture
+- Slash commands only (Chat Input)
 
 ### 🧠 Architecture
-- Simplified handler structure while preserving extensibility
-- Improved type-safety across commands, events, and managers
-- Refactored MongoDB manager to work cleanly with modern Mongoose typings
-- Removed legacy API usage and deprecated Discord features
+- Simplified handler structure
+- Improved type safety
+- Refactored MongoDB manager
 
 ### 🧰 Tooling
-- Updated TypeScript configuration for modern targets
-- Migrated ESLint to **ESLint v9 (flat config)**
-- Fixed all linting issues across the project
-- Improved developer experience with stricter but practical lint rules
-
-### 🛠 Fixes
-- Fixed breaking type issues caused by outdated Discord.js typings
-- Fixed interaction handling edge cases
-- Fixed command registration inconsistencies
-- Removed unsafe or deprecated patterns
+- Updated TypeScript targets
+- Migrated to ESLint v9 (flat config)
+- Fixed all linting issues
 
 ### ⚠️ Breaking Changes
-- **discord.js v13 is no longer supported**
-- Node.js **18+ is now required**
-- Prefix/message commands are not supported (slash commands only)
-- Some internal APIs were renamed or removed
+- discord.js v13 no longer supported
+- Node.js 18+ required
+- Message/prefix commands removed
 
 ---
 
 ## [1.0.0] - Initial Release
 
 ### ✨ Added
-- Initial TypeScript handler for discord.js v13
-- Command and event handler system
+- Initial TypeScript handler
+- Command and event system
 - Optional MongoDB integration

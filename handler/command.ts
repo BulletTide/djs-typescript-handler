@@ -20,7 +20,8 @@ import {
     SubcommandGroup,
     Subcommand,
     CommandOptions,
-    Argument
+    Argument,
+    CommandCooldown
 } from './typings';
 
 /* --------------------------------------------- */
@@ -48,6 +49,8 @@ class HandlerCommand {
     perms: PermissionResolvable[];
     clientPerms: PermissionResolvable[];
 
+    cooldown?: CommandCooldown;
+
     groups: Record<string, SubcommandGroup> | null;
     subcommands: Record<string, Subcommand> | null;
 
@@ -68,6 +71,8 @@ class HandlerCommand {
 
         this.perms = opts.perms ?? [];
         this.clientPerms = opts.clientPerms ?? [];
+
+        this.cooldown = opts.cooldown;
 
         this.groups = opts.groups ?? null;
         this.subcommands = opts.subcommands ?? null;

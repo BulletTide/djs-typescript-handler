@@ -32,6 +32,15 @@ export interface AutocompleteExecutionContext {
 }
 
 /* --------------------------------------------- */
+/* Cooldowns                                     */
+/* --------------------------------------------- */
+
+export interface CommandCooldown {
+    duration: number; // seconds
+    scope?: 'USER' | 'GUILD' | 'GLOBAL';
+}
+
+/* --------------------------------------------- */
 /* Command Options                               */
 /* --------------------------------------------- */
 
@@ -49,6 +58,8 @@ export interface CommandOptions {
     perms?: PermissionResolvable[];
     clientPerms?: PermissionResolvable[];
     nsfw?: boolean;
+
+    cooldown?: CommandCooldown;
 
     options?: unknown[];
     groups?: Record<string, SubcommandGroup> | null;

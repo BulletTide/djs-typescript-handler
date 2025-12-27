@@ -20,6 +20,7 @@ import { registerCommands, registerEvents } from './registry';
 import { Command } from '../src/utils/command';
 import { Utils } from '../src/utils/utils';
 import { Manager } from './manager';
+import { CooldownManager } from './cooldowns';
 
 import guildModel from '../src/schemas/guild';
 import profileModel from '../src/schemas/profile';
@@ -44,6 +45,7 @@ interface BotConfig {
 class HandlerClient extends Client {
     commands: Collection<string, Command>;
     categories: Collection<string, string[]>;
+    cooldowns: CooldownManager;
 
     guildInfo: Manager<string, Document>;
     profileInfo: Manager<string, Document>;
@@ -57,6 +59,7 @@ class HandlerClient extends Client {
 
         this.commands = new Collection();
         this.categories = new Collection();
+        this.cooldowns = new CooldownManager();
 
         this.guildInfo = new Manager(this, guildModel);
         this.profileInfo = new Manager(this, profileModel);

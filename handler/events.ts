@@ -2,10 +2,7 @@
     Author: Bullet_Tide.
 */
 
-import {
-    Interaction,
-    Guild
-} from 'discord.js';
+import { Interaction, Guild } from 'discord.js';
 import { Client } from '../src/utils/client';
 
 export async function guildCreate(client: Client, guild: Guild): Promise<void> {
@@ -81,6 +78,10 @@ export async function interactionCreate(
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
+    /* --------------------------------------------- */
+    /* Global Guards                                 */
+    /* --------------------------------------------- */
+
     if (command.guildOnly && !interaction.inGuild()) {
         return client.utils.quickError(
             interaction,
@@ -94,6 +95,33 @@ export async function interactionCreate(
             'This command is restricted to the bot owner.'
         );
     }
+
+    /* --------------------------------------------- */
+    /* Cooldowns                                     */
+    /* --------------------------------------------- */
+
+    const remaining = client.cooldowns.isOnCooldown(
+        command,
+        interaction.user.id,
+        interaction.inGuild() ? interaction.guildId : null
+    );
+
+    if (remaining) {
+        return client.utils.quickError(
+            interaction,
+            `Please wait **${remaining}s** before using this command again.`
+        );
+    }
+
+    client.cooldowns.setCooldown(
+        command,
+        interaction.user.id,
+        interaction.inGuild() ? interaction.guildId : null
+    );
+
+    /* --------------------------------------------- */
+    /* Safe Execution                                */
+    /* --------------------------------------------- */
 
     try {
         await command.execute({

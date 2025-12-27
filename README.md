@@ -1,83 +1,96 @@
 # Discord.js v14 TypeScript Handler
 
-## About
+## Overview
 
-Welcome! This is a powerful, modern **TypeScript handler** built for **discord.js v14**.  
-The goal of this project is to eliminate the repetitive and time-consuming process of writing a Discord bot handler from scratch, while still giving developers full control and flexibility.
+A modern, **production-ready Discord bot handler** built with **TypeScript** and **discord.js v14**.
 
-This handler is designed to be:
-- Clean, performant, and scalable
-- Fully aligned with Discord.js v14 standards
-- Friendly for both small bots and large projects
+This project exists to remove the boilerplate and architectural guesswork involved in building Discord bots, while still giving developers **full control** over structure, behavior, and scalability.
 
-### Features
+Designed for:
+- Small bots that need clean structure
+- Large bots that need strict typing and scalability
+- Developers who want correctness over magic
+
+---
+
+## ✨ Features
+
 - ⚡ Automatic command & event loading
-- 🧠 Optional MongoDB support with a generic manager
-- 🧩 Support for subcommands & subcommand groups
-- 🛠️ Strict TypeScript typing
+- 🧩 Slash commands with subcommands & groups
+- 🖱️ User & Message context menu commands
+- ⏱️ Optional per-command cooldowns
+- 🧠 Optional MongoDB integration
+- 🛠️ Strict TypeScript typing throughout
 - 🚀 Development vs production command separation
-- 📦 ESLint + TypeScript ready
-- 🔒 Slash-command–only (Discord compliant)
+- 📦 ESLint (flat config) + TypeScript ready
+- 🔒 Discord-compliant (slash commands only)
 
 ---
 
-## Requirements
+## 📋 Requirements
 
-- **Node.js 18.0.0 or newer**
-- **npm 9.0.0 or newer**
+- **Node.js 18+**
+- **npm 9+**
 - **discord.js v14**
-- **TypeScript v5+**
+- **TypeScript 5+**
 
-> MongoDB is **optional** and only required if you use database features.
-
----
-
-## Installation
-
-    npm install
+> MongoDB is optional and only required if you use database features.
 
 ---
 
-## Project Structure
+## 📦 Installation
 
-    src/
-    ├── commands/           # Slash commands
-    │   ├── default/
-    │   └── owner/
-    ├── events/             # Discord events
-    ├── utils/              # Client, Command, Utils
-    ├── config/             # Configuration & languages
-    ├── schemas/            # Mongoose schemas (optional)
-    ├── types/              # Shared TypeScript types
-    └── index.ts            # Entry point
-
-    handler/
-    ├── client.ts           # Extended Discord client
-    ├── command.ts          # Command builder
-    ├── events.ts           # Shared event logic
-    ├── manager.ts          # MongoDB manager
-    ├── registry.ts         # Command/event loader
-    └── typings.d.ts        # Handler typings
+```bash
+npm install
+```
 
 ---
 
-## Configuration
+## 📁 Project Structure
+
+```text
+src/
+├── commands/           # Slash & context menu commands
+│   ├── default/
+│   └── owner/
+├── events/             # Discord events
+├── utils/              # Client, Command, utilities
+├── config/             # Configuration & languages
+├── schemas/            # Mongoose schemas (optional)
+├── types/              # Shared TypeScript types
+└── index.ts            # Entry point
+
+handler/
+├── client.ts           # Extended Discord client
+├── command.ts          # Command builder
+├── events.ts           # Central interaction handling
+├── cooldowns.ts        # Cooldown manager
+├── manager.ts          # MongoDB manager
+├── registry.ts         # Command/event loader
+└── typings.d.ts        # Handler typings
+```
+
+---
+
+## ⚙️ Configuration
 
 1. Navigate to `src/config`
-2. Fill in your bot configuration
-3. Add your Discord user ID(s) to `DEVS`
-4. Add development server IDs to `DEV_SERVERS`
-5. (Optional) Add a MongoDB URI if using database features
+2. Fill in `config.json`
+3. Add your Discord user IDs to `DEVS`
+4. Add development guild IDs to `DEV_SERVERS`
+5. (Optional) Add `MONGODB_URI`
 
 ---
 
-## Development vs Production
+## 🚀 Development vs Production Commands
 
-Commands marked as:
+Commands marked with:
 
-    development: true
+```ts
+development: true
+```
 
-- Are registered **only** to servers listed in `DEV_SERVERS`
+- Are registered **only** in `DEV_SERVERS`
 - Update instantly
 
 Global commands:
@@ -85,46 +98,39 @@ Global commands:
 - May take up to **1 hour** to propagate
 
 **Recommended workflow**
-1. Develop commands using `development: true`
-2. Switch to `false` once stable
+1. Develop using `development: true`
+2. Switch to `false` when stable
 
 ---
 
-## Adding a Command
+## 🧠 Commands
 
-### Command Flags
+All commands extend the base `Command` class and must implement `execute`.
 
-Commands support the following built-in flags:
+They receive a **unified execution context**, regardless of command type.
 
-| Flag         | Description |
-|--------------|------------|
-| `ownerOnly`  | Only users listed in `DEVS` may execute |
-| `devOnly`    | Command only works in `DEV_SERVERS` |
-| `guildOnly`  | Prevents DM usage |
-| `nsfw`       | Requires an NSFW channel |
-| `hideCommand`| Hidden from help menu |
-
-These flags are **fully enforced by the handler** and require no additional code.
-
-
-## Command Template
-
-All commands extend the base `Command` class and receive a shared execution context.
+### Basic Command
 
 ```ts
-import { Command } from '../../src/utils/command';
-import { Client } from '../../src/utils/client';
-import { CommandExecutionContext } from '../../handler/typings';
+import { Command } from '../../utils/command';
+import { Client } from '../../utils/client';
+import { CommandExecutionContext } from '../../../handler/typings';
 
 export default class Example extends Command {
     constructor(client: Client) {
         super(client, {
             name: 'example',
-            description: 'Example command'
+            description: 'Example command',
+            cooldown: {
+                duration: 5,
+                scope: 'USER'
+            }
         });
     }
 
     async execute({ interaction }: CommandExecutionContext): Promise<void> {
+        if (!interaction.isChatInputCommand()) return;
+
         await interaction.reply('Hello world');
     }
 }
@@ -135,136 +141,131 @@ export default class Example extends Command {
 ### Subcommands
 
 ```ts
-import { Command } from '../../src/utils/command';
-import { Client } from '../../src/utils/client';
-import { CommandExecutionContext } from '../../handler/typings';
-
-export default class Example extends Command {
-    constructor(client: Client) {
-        super(client, {
-            name: 'example',
-            description: 'Example with subcommands',
-            subcommands: {
-                one: {
-                    description: 'First subcommand',
-                    execute: async ({ interaction }: CommandExecutionContext) => {
-                        await interaction.reply('Subcommand one');
-                    }
-                },
-                two: {
-                    description: 'Second subcommand',
-                    execute: async ({ interaction }: CommandExecutionContext) => {
-                        await interaction.reply('Subcommand two');
-                    }
-                }
-            }
-        });
+subcommands: {
+    one: {
+        description: 'First subcommand',
+        execute: async ({ interaction }) => {
+            await interaction.reply('Subcommand one');
+        }
+    },
+    two: {
+        description: 'Second subcommand',
+        execute: async ({ interaction }) => {
+            await interaction.reply('Subcommand two');
+        }
     }
 }
 ```
 
 ---
 
-### Slash Command Autocomplete
+### Autocomplete
 
-Autocomplete can be defined inline on an argument.
+Autocomplete can be defined inline per argument:
 
 ```ts
-args: [
-    {
-        name: 'query',
-        type: 'STRING',
-        description: 'Search query',
-        autocomplete: async ({ interaction }) => {
-            const focused = interaction.options.getFocused();
-            return [
-                { name: `${focused} one`, value: `${focused}_1` },
-                { name: `${focused} two`, value: `${focused}_2` }
-            ];
-        }
-    }
-]
+autocomplete: async ({ interaction }) => {
+    const focused = interaction.options.getFocused();
+    return [
+        { name: `${focused} one`, value: `${focused}_1` },
+        { name: `${focused} two`, value: `${focused}_2` }
+    ];
+}
 ```
 
-Notes
-- Autocomplete is optional
 - Fully typed
-- Automatically routed by the handler
-- No separate registry required
+- Automatically routed
+- No registry required
 
 ---
 
-## Adding an Event
+## 🖱️ Context Menu Commands
+
+User and Message context menus are supported using the same `Command` class.
+
+```ts
+import { ApplicationCommandType } from 'discord.js';
+
+super(client, {
+    name: 'Inspect User',
+    type: ApplicationCommandType.User
+});
+```
+
+- No options
+- No description required
+- Shares guards, permissions, and cooldowns
+
+---
+
+## ⏱️ Cooldowns
+
+Commands may define optional cooldowns:
+
+```ts
+cooldown: {
+    duration: 10,
+    scope: 'USER' // USER | GUILD | GLOBAL
+}
+```
+
+- Checked before execution
+- In-memory and fast
+- Automatically expires
+
+---
+
+## 🧩 Events
 
 ```ts
 import { Client } from '../../utils/client';
 
 export default async (client: Client): Promise<void> => {
-    //
+    // Event logic
 };
 ```
 
-**Rules**
-- File name **must match the Discord event name**
-- Events are auto-registered at startup
+Rules:
+- File name must match the Discord event
+- Automatically registered
 
 ---
 
-## Discord.js v14 Notes
-
-This project strictly follows Discord.js v14:
+## ℹ️ Discord.js v14 Notes
 
 - `MessageEmbed` → `EmbedBuilder`
-- `Intents` → `GatewayIntentBits`
 - `CommandInteraction` → `ChatInputCommandInteraction`
-- Permissions use `PermissionFlagsBits`
-- Slash commands only (no message commands)
-
-Older v13 code **will not work without migration**.
+- `Intents` → `GatewayIntentBits`
+- Slash commands only
 
 ---
 
-## Environment Variables (Optional)
+## 🌱 Environment Variables (Optional)
 
-    TOKEN=your-bot-token
-    MONGODB_URI=mongodb://localhost:27017/bot
-
-These can override values in `config.json`.
-
----
-
-## FAQ
-
-### Commands not showing up?
-- Ensure the bot has the `applications.commands` scope
-- Verify `DEV_SERVERS` is configured
-- Restart the bot after changes
-
-### MongoDB required?
-No. Database features are optional.
-
-### ESLint errors in template files?
-Template files are ignored automatically.
+```text
+TOKEN=your-bot-token
+MONGODB_URI=mongodb://localhost:27017/bot
+```
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
-- Follow existing project structure
-- Use Discord.js v14 APIs only
+- Follow the existing structure
+- Use discord.js v14 APIs only
 - All changes must pass `tsc` and `eslint`
 - Keep the handler framework-agnostic
 
 ---
 
-## License
+## 📜 License
 
-MIT License  
-You are free to use, modify, and distribute this project.
+MIT License — free to use, modify, and distribute.
 
 ---
 
-## Credits
+## 🙏 Credits
 
 Inspired by  
-[Canta’s bot-prefab-package](https://www.npmjs.com/package/bot-prefab-package)
+Canta’s bot-prefab-package  
+https://www.npmjs.com/package/bot-prefab-package
