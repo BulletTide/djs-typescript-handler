@@ -15,9 +15,17 @@ import {
     Guild,
     TextChannel,
     ChannelType,
-    PermissionsBitField
+    PermissionsBitField,
+    ChatInputCommandInteraction,
+    UserContextMenuCommandInteraction,
+    MessageContextMenuCommandInteraction
 } from 'discord.js';
 import { Client } from '../src/utils/client';
+
+type AnyInteraction =
+    | ChatInputCommandInteraction
+    | UserContextMenuCommandInteraction
+    | MessageContextMenuCommandInteraction;
 
 class HandlerUtils {
     client: Client;
@@ -73,7 +81,10 @@ class HandlerUtils {
         console.log(`[${type}] [${path}] ${text}`);
     }
 
-    async quickError(interaction: any, message: string) {
+    async quickError(
+        interaction: AnyInteraction,
+        message: string
+    ): Promise<void> {
         if (!interaction.replied && !interaction.deferred) {
             await interaction.reply({ content: message, ephemeral: true });
         } else {
@@ -82,7 +93,7 @@ class HandlerUtils {
     }
 
     async quickSuccess(
-        interaction: any,
+        interaction: AnyInteraction,
         message: string
     ): Promise<void> {
         if (interaction.replied || interaction.deferred) {
@@ -107,12 +118,10 @@ class HandlerUtils {
             (c): c is TextChannel =>
                 c.type === ChannelType.GuildText &&
                 c.viewable &&
-                c
-                    .permissionsFor(me)
-                    ?.has([
-                        PermissionsBitField.Flags.ViewChannel,
-                        PermissionsBitField.Flags.SendMessages
-                    ])
+                c.permissionsFor(me)?.has([
+                    PermissionsBitField.Flags.ViewChannel,
+                    PermissionsBitField.Flags.SendMessages
+                ])
         );
 
         return channel ?? null;

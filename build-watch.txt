@@ -1,8 +1,0 @@
-
-> discordjs-v13-handler@1.0.0 build
-> tsc -w
-
-[2J[3J[H10:10:07 AM - Starting compilation in watch mode...
-
-
-10:10:10 AM - Found 0 errors. Watching for file changes.

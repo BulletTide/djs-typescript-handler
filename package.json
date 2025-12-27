@@ -1,10 +1,10 @@
 {
-  "name": "discordjs-v13-handler",
-  "version": "2.0.0",
-  "description": "A basic typescript handler for discord.js v13.",
+  "name": "discordjs-v14-typescript-handler",
+  "version": "2.4.1",
+  "description": "A modern, production-ready TypeScript handler for discord.js v14",
   "main": "src/index.ts",
   "types": "handler/typings.d.ts",
-  "type":"module",
+  "type": "module",
   "private": true,
   "author": "Bullet_Tide",
   "license": "MIT",
@@ -17,18 +17,16 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=9.0.0",
-    "discord.js": ">=14.0.0",
-    "typescript": ">=5.0.0"
+    "npm": ">=9.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BulletTide/discordjs-v13-handlers.git"
+    "url": "git+https://github.com/BulletTide/djs-typescript-handler.git"
   },
   "bugs": {
-    "url": "https://github.com/BulletTide/discordjs-v13-handlers/issues"
+    "url": "https://github.com/BulletTide/djs-typescript-handler/issues"
   },
-  "homepage": "https://github.com/BulletTide/discordjs-v13-handlers#readme",
+  "homepage": "https://github.com/BulletTide/djs-typescript-handler#readme",
   "dependencies": {
     "discord.js": "^14.25.1",
     "mongoose": "^5.13.23"
