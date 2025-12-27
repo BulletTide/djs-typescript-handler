@@ -4,8 +4,16 @@
 
 import { Interaction, Guild } from 'discord.js';
 import { Client } from '../src/utils/client';
+import { canRunCommand } from './guards';
 
-export async function guildCreate(client: Client, guild: Guild): Promise<void> {
+/* --------------------------------------------- */
+/* Guild Events                                  */
+/* --------------------------------------------- */
+
+export async function guildCreate(
+    client: Client,
+    guild: Guild
+): Promise<void> {
     try {
         if (!guild.available) return;
 
@@ -17,10 +25,18 @@ export async function guildCreate(client: Client, guild: Guild): Promise<void> {
         await channel.send(
             'Thanks for adding me! For a list of commands, use `/help`!'
         );
-    } catch (e) {
-        client.utils.log('ERROR', 'handler/events.ts', String(e));
+    } catch {
+        client.utils.log(
+            'ERROR',
+            'handler/events.ts',
+            'Failed to handle guildCreate event'
+        );
     }
 }
+
+/* --------------------------------------------- */
+/* Interaction Create                            */
+/* --------------------------------------------- */
 
 export async function interactionCreate(
     client: Client,
@@ -32,33 +48,35 @@ export async function interactionCreate(
     /* --------------------------------------------- */
 
     if (interaction.isAutocomplete()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command) {
+            await interaction.respond([]);
+            return;
+        }
+
+        const focused = interaction.options.getFocused(true);
+        const group = interaction.options.getSubcommandGroup(false);
+        const sub = interaction.options.getSubcommand(false);
+
+        const key = [
+            interaction.commandName,
+            group,
+            sub,
+            focused.name
+        ].filter(Boolean).join('.');
+
+        const handler =
+            command.autocomplete.get(key) ??
+            command.autocomplete.get(
+                `${interaction.commandName}.${focused.name}`
+            );
+
+        if (!handler) {
+            await interaction.respond([]);
+            return;
+        }
+
         try {
-            const command = client.commands.get(interaction.commandName);
-            if (!command) {
-                await interaction.respond([]);
-                return;
-            }
-
-            const focused = interaction.options.getFocused(true);
-            const group = interaction.options.getSubcommandGroup(false);
-            const sub = interaction.options.getSubcommand(false);
-
-            const fullPath = [
-                interaction.commandName,
-                group,
-                sub,
-                focused.name
-            ].filter(Boolean).join('.');
-
-            const handler =
-                command.autocomplete.get(fullPath) ??
-                command.autocomplete.get(focused.name);
-
-            if (!handler) {
-                await interaction.respond([]);
-                return;
-            }
-
             const result = await Promise.resolve(
                 handler({ client, interaction })
             );
@@ -74,17 +92,11 @@ export async function interactionCreate(
                 : [];
 
             await interaction.respond(choices);
-        } catch (error) {
-            client.utils.log(
-                'ERROR',
-                'autocomplete',
-                String(error)
-            );
-
+        } catch {
             try {
                 await interaction.respond([]);
             } catch {
-                // Discord already timed out — nothing else to do
+                // Discord already timed out
             }
         }
 
@@ -92,36 +104,18 @@ export async function interactionCreate(
     }
 
     /* --------------------------------------------- */
-    /* Slash & Context Menu Commands                 */
+    /* Slash Commands                                */
     /* --------------------------------------------- */
 
-    if (
-        !interaction.isChatInputCommand() &&
-        !interaction.isUserContextMenuCommand() &&
-        !interaction.isMessageContextMenuCommand()
-    ) {
-        return;
-    }
+    if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
-    /* --------------------------------------------- */
-    /* Global Guards                                 */
-    /* --------------------------------------------- */
-
-    if (command.guildOnly && !interaction.inGuild()) {
-        return client.utils.quickError(
-            interaction,
-            'This command can only be used in a server.'
-        );
-    }
-
-    if (command.ownerOnly && !client.config.DEVS.includes(interaction.user.id)) {
-        return client.utils.quickError(
-            interaction,
-            'This command is restricted to the bot owner.'
-        );
+    const guardError = canRunCommand(client, command, interaction);
+    if (guardError) {
+        await client.utils.quickError(interaction, guardError);
+        return;
     }
 
     /* --------------------------------------------- */
@@ -131,33 +125,29 @@ export async function interactionCreate(
     const remaining = client.cooldowns.isOnCooldown(
         command,
         interaction.user.id,
-        interaction.inGuild() ? interaction.guildId : null
+        interaction.guildId
     );
 
     if (remaining) {
-        return client.utils.quickError(
+        await client.utils.quickError(
             interaction,
             `Please wait **${remaining}s** before using this command again.`
         );
+        return;
     }
 
     client.cooldowns.setCooldown(
         command,
         interaction.user.id,
-        interaction.inGuild() ? interaction.guildId : null
+        interaction.guildId
     );
 
     /* --------------------------------------------- */
     /* Subcommand Resolution                         */
     /* --------------------------------------------- */
 
-    const group = interaction.isChatInputCommand()
-        ? interaction.options.getSubcommandGroup(false)
-        : null;
-
-    const sub = interaction.isChatInputCommand()
-        ? interaction.options.getSubcommand(false)
-        : null;
+    const group = interaction.options.getSubcommandGroup(false);
+    const sub = interaction.options.getSubcommand(false);
 
     const executor =
         group && command.groups
@@ -167,22 +157,28 @@ export async function interactionCreate(
                 : command;
 
     /* --------------------------------------------- */
-    /* Safe Execution                                */
+    /* Execution + Hooks                             */
     /* --------------------------------------------- */
 
     try {
+        for (const hook of client.hooks.beforeExecute ?? []) {
+            await hook({ client, interaction, group, subcommand: sub, command });
+        }
+
         await executor?.execute?.({
             client,
             interaction,
             group,
             subcommand: sub
         });
-    } catch (error) {
-        client.utils.log(
-            'ERROR',
-            `command:${command.name}`,
-            String(error)
-        );
+
+        for (const hook of client.hooks.afterExecute ?? []) {
+            await hook({ client, interaction, group, subcommand: sub, command });
+        }
+    } catch {
+        for (const hook of client.hooks.onError ?? []) {
+            await hook({ client, interaction, group, subcommand: sub, command });
+        }
 
         await client.utils.quickError(
             interaction,

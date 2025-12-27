@@ -21,15 +21,12 @@ import { Command } from '../src/utils/command';
 import { Utils } from '../src/utils/utils';
 import { Manager } from './manager';
 import { CooldownManager } from './cooldowns';
+import { CommandHooks } from './hooks';
 
 import guildModel from '../src/schemas/guild';
 import profileModel from '../src/schemas/profile';
 import { Languages } from '../src/types/languages';
 import { env, EnvConfig } from '../src/config/env';
-
-/* --------------------------------------------- */
-/* Client                                        */
-/* --------------------------------------------- */
 
 class HandlerClient extends Client {
     commands: Collection<string, Command>;
@@ -38,6 +35,8 @@ class HandlerClient extends Client {
 
     guildInfo: Manager<string, Document>;
     profileInfo: Manager<string, Document>;
+
+    hooks: CommandHooks = {};
 
     config: EnvConfig;
     languages: Languages;
@@ -55,49 +54,49 @@ class HandlerClient extends Client {
 
         this.config = env;
         this.languages = require('../src/config/languages.json') as Languages;
-
         this.utils = new Utils(this);
     }
 
     async loadCommands(): Promise<void> {
         await registerCommands(this, '../src/commands');
 
-        const guildChatInput = toChatInputCommands(
-            this.commands.filter(
-                c =>
-                    c.development &&
-                    c.type === ApplicationCommandType.ChatInput
-            )
-        );
+        const chatInput = this.commands
+            .filter(c => c.type === ApplicationCommandType.ChatInput)
+            .map<RESTPostAPIChatInputApplicationCommandsJSONBody>(cmd => ({
+                name: cmd.name,
+                description: cmd.description!,
+                options: cmd.options
+            }));
 
-        const globalChatInput = toChatInputCommands(
-            this.commands.filter(
-                c =>
-                    !c.development &&
-                    c.type === ApplicationCommandType.ChatInput
-            )
-        );
-
-        const contextMenus = toContextMenuCommands(
-            this.commands.filter(
+        const contextMenus = this.commands
+            .filter(
                 c =>
                     c.type === ApplicationCommandType.User ||
                     c.type === ApplicationCommandType.Message
             )
-        );
+            .map<RESTPostAPIContextMenuApplicationCommandsJSONBody>(cmd => ({
+                name: cmd.name,
+                type: cmd.type as
+                    | ApplicationCommandType.User
+                    | ApplicationCommandType.Message
+            }));
 
         for (const guildId of this.config.DEV_SERVERS) {
             const guild = await this.guilds.fetch(guildId).catch(() => null);
             if (!guild) continue;
 
             await guild.commands.set([
-                ...guildChatInput,
+                ...chatInput.filter(c =>
+                    this.commands.get(c.name)?.development
+                ),
                 ...contextMenus
             ]);
         }
 
         await this.application!.commands.set([
-            ...globalChatInput,
+            ...chatInput.filter(
+                c => !this.commands.get(c.name)?.development
+            ),
             ...contextMenus
         ]);
     }
@@ -121,28 +120,3 @@ class HandlerClient extends Client {
 }
 
 export { HandlerClient };
-
-/* --------------------------------------------- */
-/* Helpers                                       */
-/* --------------------------------------------- */
-
-function toChatInputCommands(
-    collection: Collection<string, Command>
-): RESTPostAPIChatInputApplicationCommandsJSONBody[] {
-    return collection.map(cmd => ({
-        name: cmd.name,
-        description: cmd.description!,
-        options: cmd.options
-    }));
-}
-
-function toContextMenuCommands(
-    collection: Collection<string, Command>
-): RESTPostAPIContextMenuApplicationCommandsJSONBody[] {
-    return collection.map(cmd => ({
-        name: cmd.name,
-        type: cmd.type as
-            | ApplicationCommandType.User
-            | ApplicationCommandType.Message
-    }));
-}

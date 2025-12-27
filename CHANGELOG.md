@@ -10,6 +10,28 @@ https://semver.org/
 
 ---
 
+## [2.5.0] - 2025-12-27
+
+### ✨ Added
+- Command lifecycle hooks (`beforeExecute`, `afterExecute`, `onError`)
+- Centralized typed permission guards
+- Developer warning when uncompiled TypeScript files are detected
+- Collision-safe autocomplete handler routing
+
+### 🚀 Improved
+- MongoDB manager no longer writes on every cache miss
+- Safer autocomplete resolution across subcommands and groups
+- Internal execution pipeline clarity and extensibility
+
+### 🛠 Fixed
+- Restored `client.languages` typing and availability
+- Restored `guildCreate` framework event export
+- Strictly aligned command option typing with `discord-api-types`
+- ESLint and TypeScript strict-mode compliance across handler
+
+
+___
+
 ## [2.4.1] - 2025-12-27
 
 ### 🛠 Fixes

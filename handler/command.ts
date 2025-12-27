@@ -1,7 +1,3 @@
-/*
-    Author: Bullet_Tide.
-*/
-
 import {
     ApplicationCommandOptionType,
     ApplicationCommandType,
@@ -24,20 +20,16 @@ import {
     CommandCooldown
 } from './typings';
 
-/* --------------------------------------------- */
-/* Base Command                                  */
-/* --------------------------------------------- */
-
 class HandlerCommand {
     client: Client;
 
     name: string;
     description?: string;
     type: ApplicationCommandType;
-
     category: string;
-    options: APIApplicationCommandOption[];
-    autocomplete: Map<string, Argument['autocomplete']>;
+
+    options: APIApplicationCommandOption[] = [];
+    autocomplete = new Map<string, Argument['autocomplete']>();
 
     development: boolean;
     devOnly: boolean;
@@ -48,7 +40,6 @@ class HandlerCommand {
 
     perms: PermissionResolvable[];
     clientPerms: PermissionResolvable[];
-
     cooldown?: CommandCooldown;
 
     groups: Record<string, SubcommandGroup> | null;
@@ -71,20 +62,14 @@ class HandlerCommand {
 
         this.perms = opts.perms ?? [];
         this.clientPerms = opts.clientPerms ?? [];
-
         this.cooldown = opts.cooldown;
 
         this.groups = opts.groups ?? null;
         this.subcommands = opts.subcommands ?? null;
 
-        this.autocomplete = new Map();
+        if (this.type !== ApplicationCommandType.ChatInput) return;
 
-        if (this.type !== ApplicationCommandType.ChatInput) {
-            this.options = [];
-            return;
-        }
-
-        if (opts.options?.length) {
+        if (opts.options) {
             this.options = opts.options as APIApplicationCommandOption[];
         } else if (this.groups) {
             this.options = buildGroupOptions(
@@ -98,29 +83,23 @@ class HandlerCommand {
                 this.subcommands,
                 this.autocomplete
             );
-        } else {
-            this.options = [];
         }
     }
 }
 
 export { HandlerCommand, CommandOptions };
 
-/* --------------------------------------------- */
-/* Builders                                      */
-/* --------------------------------------------- */
-
 function buildGroupOptions(
-    commandName: string,
+    command: string,
     groups: Record<string, SubcommandGroup>,
     autocomplete: Map<string, Argument['autocomplete']>
 ): APIApplicationCommandSubcommandGroupOption[] {
-    return Object.entries(groups).map(([groupName, group]) => ({
+    return Object.entries(groups).map(([name, group]) => ({
         type: ApplicationCommandOptionType.SubcommandGroup,
-        name: groupName,
+        name,
         description: group.description,
         options: buildSubcommandOptions(
-            `${commandName}.${groupName}`,
+            `${command}.${name}`,
             group.subcommands,
             autocomplete
         )
@@ -137,80 +116,86 @@ function buildSubcommandOptions(
         name,
         description: sub.description,
         options: (sub.args ?? []).map(arg =>
-            buildArgumentOption(arg, autocomplete)
+            buildArgumentOption(arg, autocomplete, `${path}.${name}`)
         )
     }));
 }
 
 function buildArgumentOption(
     arg: Argument,
-    autocomplete: Map<string, Argument['autocomplete']>
+    autocomplete: Map<string, Argument['autocomplete']>,
+    path: string
 ): APIApplicationCommandBasicOption {
-    const common = {
+    const base = {
         name: arg.name,
         description: arg.description,
         required: arg.required ?? false
     };
 
-    const hasAutocomplete = typeof arg.autocomplete === 'function';
+    const supportsAutocomplete =
+        arg.type === 'STRING' ||
+        arg.type === 'INTEGER' ||
+        arg.type === 'NUMBER';
 
-    if (hasAutocomplete) {
-        autocomplete.set(arg.name, arg.autocomplete);
+    if (supportsAutocomplete && arg.autocomplete) {
+        autocomplete.set(`${path}.${arg.name}`, arg.autocomplete);
     }
 
     switch (arg.type) {
     case 'STRING':
         return {
-            ...common,
+            ...base,
             type: ApplicationCommandOptionType.String,
-            autocomplete: hasAutocomplete
+            ...(arg.autocomplete ? { autocomplete: true } : {})
         };
 
     case 'INTEGER':
         return {
-            ...common,
+            ...base,
             type: ApplicationCommandOptionType.Integer,
-            autocomplete: hasAutocomplete
+            ...(arg.autocomplete ? { autocomplete: true } : {})
         };
 
     case 'NUMBER':
         return {
-            ...common,
+            ...base,
             type: ApplicationCommandOptionType.Number,
-            autocomplete: hasAutocomplete
+            ...(arg.autocomplete ? { autocomplete: true } : {})
         };
 
     case 'BOOLEAN':
         return {
-            ...common,
+            ...base,
             type: ApplicationCommandOptionType.Boolean
         };
 
     case 'USER':
         return {
-            ...common,
+            ...base,
             type: ApplicationCommandOptionType.User
         };
 
     case 'CHANNEL':
         return {
-            ...common,
+            ...base,
             type: ApplicationCommandOptionType.Channel
         };
 
     case 'ROLE':
         return {
-            ...common,
+            ...base,
             type: ApplicationCommandOptionType.Role
         };
 
     case 'MENTIONABLE':
         return {
-            ...common,
+            ...base,
             type: ApplicationCommandOptionType.Mentionable
         };
 
-    default:
-        throw new Error(`Unknown argument type: ${arg.type}`);
+    default: {
+        const _exhaustive: never = arg.type;
+        throw new Error(`Unknown argument type: ${_exhaustive}`);
+    }
     }
 }

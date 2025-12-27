@@ -1,6 +1,6 @@
 {
   "name": "discordjs-v14-typescript-handler",
-  "version": "2.4.2",
+  "version": "2.5.0",
   "description": "A modern, production-ready TypeScript handler for discord.js v14",
   "main": "src/index.ts",
   "types": "handler/typings.d.ts",

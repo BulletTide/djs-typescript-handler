@@ -24,13 +24,19 @@ async function registerCommands(
 
             if (file.includes('-ignore')) continue;
 
+            if (file.endsWith('.ts')) {
+                client.utils.log(
+                    'WARNING',
+                    'registry',
+                    `TypeScript file detected (${file}). Did you forget to run tsc?`
+                );
+            }
+
             if (stat.isDirectory()) {
                 await registerCommands(client, path.join(dir, file));
                 continue;
             }
 
-            // NOTE: The registry loads compiled JavaScript files.
-            // Ensure the project is built with `tsc` before running in production.
             if (!file.endsWith('.js')) continue;
 
             try {
@@ -42,7 +48,7 @@ async function registerCommands(
                 if (typeof cmdModule.execute !== 'function') {
                     client.utils.log(
                         'ERROR',
-                        'src/registry.js',
+                        'registry',
                         `Command "${file}" does not implement execute()`
                     );
                     continue;
@@ -53,7 +59,7 @@ async function registerCommands(
                 if (!name) {
                     client.utils.log(
                         'WARNING',
-                        'src/registry.js',
+                        'registry',
                         `The command '${fullPath}' doesn't have a name`
                     );
                     continue;
@@ -62,50 +68,33 @@ async function registerCommands(
                 if (client.commands.has(name)) {
                     client.utils.log(
                         'WARNING',
-                        'src/registry.js',
+                        'registry',
                         `The command name '${name}' (${fullPath}) has already been added.`
                     );
                     continue;
                 }
 
-                if (cmdModule.development) {
-                    const server = client.config.DEV_SERVERS[0];
-
-                    if (!server) {
-                        client.utils.log(
-                            'WARNING',
-                            'src/registry.js',
-                            'To add a development-only command, at least one DEV_SERVER is required.'
-                        );
-                        continue;
-                    }
+                if (cmdModule.development && !client.config.DEV_SERVERS[0]) {
+                    client.utils.log(
+                        'WARNING',
+                        'registry',
+                        'Development command detected but no DEV_SERVERS configured.'
+                    );
+                    continue;
                 }
 
                 client.commands.set(name, cmdModule);
 
                 if (hideCommand) continue;
 
-                if (category) {
-                    const key = category.toLowerCase();
-                    const commands = client.categories.get(key) ?? [category];
-                    commands.push(name);
-                    client.categories.set(key, commands);
-                } else {
-                    client.utils.log(
-                        'WARNING',
-                        'src/registry.js',
-                        `The command '${name}' doesn't have a category, defaulting to 'No category'.`
-                    );
-
-                    const commands =
-                        client.categories.get('no category') ?? ['No category'];
-                    commands.push(name);
-                    client.categories.set('no category', commands);
-                }
+                const key = category?.toLowerCase() ?? 'no category';
+                const list = client.categories.get(key) ?? [category ?? 'No category'];
+                list.push(name);
+                client.categories.set(key, list);
             } catch (e) {
                 client.utils.log(
                     'ERROR',
-                    'src/registry.js',
+                    'registry',
                     `Error loading command ${file}: ${e}`
                 );
             }
@@ -141,7 +130,7 @@ async function registerEvents(
             } catch (e) {
                 client.utils.log(
                     'ERROR',
-                    'src/registry.js',
+                    'registry',
                     `Error loading event ${file}: ${e}`
                 );
             }
@@ -150,6 +139,6 @@ async function registerEvents(
 }
 
 export {
-    registerEvents,
-    registerCommands
+    registerCommands,
+    registerEvents
 };
