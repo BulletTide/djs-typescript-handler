@@ -4,10 +4,7 @@
 
 import {
     Interaction,
-    GuildMember,
-    ChannelType,
-    Guild,
-    ChatInputCommandInteraction
+    Guild
 } from 'discord.js';
 import { Client } from '../src/utils/client';
 
@@ -50,9 +47,7 @@ export async function interactionCreate(
             group,
             sub,
             focused.name
-        ]
-            .filter(Boolean)
-            .join('.');
+        ].filter(Boolean).join('.');
 
         const handler = command.autocomplete.get(path);
         if (!handler) return;
@@ -72,110 +67,40 @@ export async function interactionCreate(
     }
 
     /* --------------------------------------------- */
-    /* Slash Commands                                */
+    /* Slash & Context Menu Commands                 */
     /* --------------------------------------------- */
 
-    if (!interaction.isChatInputCommand()) return;
+    if (
+        !interaction.isChatInputCommand() &&
+        !interaction.isUserContextMenuCommand() &&
+        !interaction.isMessageContextMenuCommand()
+    ) {
+        return;
+    }
 
-    const i = interaction as ChatInputCommandInteraction;
-    const command = client.commands.get(i.commandName);
+    const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
-    /* --------------------------------------------- */
-    /* Global Guards                                 */
-    /* --------------------------------------------- */
-
-    if (command.guildOnly && !i.inGuild()) {
+    if (command.guildOnly && !interaction.inGuild()) {
         return client.utils.quickError(
-            i,
+            interaction,
             'This command can only be used in a server.'
         );
     }
 
-    if (command.ownerOnly && !client.config.DEVS.includes(i.user.id)) {
+    if (command.ownerOnly && !client.config.DEVS.includes(interaction.user.id)) {
         return client.utils.quickError(
-            i,
+            interaction,
             'This command is restricted to the bot owner.'
         );
     }
 
-    if (
-        command.devOnly &&
-        (!i.inGuild() || !client.config.DEV_SERVERS.includes(i.guildId!))
-    ) {
-        return client.utils.quickError(
-            i,
-            'This command can only be used in development servers.'
-        );
-    }
-
-    /* --------------------------------------------- */
-    /* Guild Context Checks                          */
-    /* --------------------------------------------- */
-
-    if (i.inGuild()) {
-        const guild = i.guild!;
-        const member = await guild.members.fetch(i.user.id);
-        const me = guild.members.me as GuildMember;
-        const channel = await guild.channels.fetch(i.channelId);
-
-        if (
-            command.nsfw &&
-            channel?.type === ChannelType.GuildText &&
-            !channel.nsfw
-        ) {
-            return client.utils.quickError(
-                i,
-                'This command can only be used in NSFW channels.'
-            );
-        }
-
-        if (
-            command.clientPerms.length &&
-            channel?.isTextBased() &&
-            !channel.permissionsFor(me)?.has(command.clientPerms)
-        ) {
-            return client.utils.quickError(
-                i,
-                'I am missing the required permissions to run this command.'
-            );
-        }
-
-        if (
-            command.perms.length &&
-            !member.permissions.has(command.perms)
-        ) {
-            return client.utils.quickError(
-                i,
-                'You do not have permission to use this command.'
-            );
-        }
-    }
-
-    /* --------------------------------------------- */
-    /* Subcommand Resolution                         */
-    /* --------------------------------------------- */
-
-    const group = i.options.getSubcommandGroup(false);
-    const sub = i.options.getSubcommand(false);
-
-    const exec =
-        group && command.groups
-            ? command.groups[group]?.subcommands[sub!]
-            : sub && command.subcommands
-                ? command.subcommands[sub]
-                : null;
-
-    /* --------------------------------------------- */
-    /* Safe Execution                                */
-    /* --------------------------------------------- */
-
     try {
-        await exec?.execute?.({
+        await command.execute({
             client,
-            interaction: i,
-            group,
-            subcommand: sub
+            interaction,
+            group: null,
+            subcommand: null
         });
     } catch (error) {
         client.utils.log(
@@ -185,8 +110,8 @@ export async function interactionCreate(
         );
 
         await client.utils.quickError(
-            i,
-            'An unexpected error occurred while executing this command.'
+            interaction,
+            'An unexpected error occurred.'
         );
     }
 }

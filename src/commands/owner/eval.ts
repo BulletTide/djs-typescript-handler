@@ -1,11 +1,11 @@
 import {
-    ChatInputCommandInteraction,
     AttachmentBuilder,
     ApplicationCommandOptionType
 } from 'discord.js';
 
 import { Command } from '../../utils/command';
 import { Client } from '../../utils/client';
+import { CommandExecutionContext } from '../../../handler/typings';
 import { inspect } from 'util';
 
 export default class Eval extends Command {
@@ -31,13 +31,10 @@ export default class Eval extends Command {
     async execute({
         client,
         interaction
-    }: {
-        client: Client;
-        interaction: ChatInputCommandInteraction;
-    }): Promise<void> {
-        let code = interaction.options.getString('code', true);
+    }: CommandExecutionContext): Promise<void> {
+        if (!interaction.isChatInputCommand()) return;
 
-        // normalize quotes
+        let code = interaction.options.getString('code', true);
         code = code.replace(/[“”]/g, '"').replace(/[‘’]/g, '\'');
 
         try {
@@ -49,18 +46,11 @@ export default class Eval extends Command {
             const stop = process.hrtime(start);
             const time = (((stop[0] * 1e9) + stop[1]) / 1e6).toFixed(2);
 
-            const output = clean(
-                client,
-                inspect(evaled, { depth: 0 })
-            );
-
+            const output = clean(client, inspect(evaled, { depth: 0 }));
             const result = `**Output:**\n\`\`\`js\n${output}\n\`\`\`\n**Time Taken:** \`${time}ms\``;
 
             if (result.length < 2000) {
-                await interaction.reply({
-                    content: result,
-                    ephemeral: true
-                });
+                await interaction.reply({ content: result, ephemeral: true });
             } else {
                 const attachment = new AttachmentBuilder(
                     Buffer.from(result),
@@ -72,7 +62,7 @@ export default class Eval extends Command {
                     ephemeral: true
                 });
             }
-        } catch (error: any) {
+        } catch (error) {
             await interaction.reply({
                 content: `**Error:**\n\`\`\`xl\n${clean(client, String(error))}\n\`\`\``,
                 ephemeral: true

@@ -1,5 +1,4 @@
 import {
-    ChatInputCommandInteraction,
     EmbedBuilder,
     ApplicationCommandOptionType,
     PermissionFlagsBits
@@ -7,6 +6,8 @@ import {
 
 import { Command } from '../../utils/command';
 import { Client } from '../../utils/client';
+import { CommandExecutionContext } from '../../../handler/typings';
+import { HelpLanguage } from '../../types/languages';
 
 export default class Help extends Command {
     constructor(client: Client) {
@@ -29,16 +30,12 @@ export default class Help extends Command {
         });
     }
 
-    async execute({
-        client,
-        interaction
-    }: {
-        client: Client;
-        interaction: ChatInputCommandInteraction;
-    }): Promise<void> {
-        const languageHelp = client.languages.help.names;
+    async execute({ client, interaction }: CommandExecutionContext): Promise<void> {
+        if (!interaction.isChatInputCommand()) return;
 
+        const languageHelp = client.languages.help.names;
         const name = interaction.options.getString('name')?.toLowerCase();
+
         if (!name) {
             await defaultHelp(client, interaction, languageHelp);
             return;
@@ -46,14 +43,13 @@ export default class Help extends Command {
 
         const command = client.commands.get(name);
         const category = client.categories.get(name);
-
         const embed = new EmbedBuilder();
 
         if (
             command &&
             !command.hideCommand &&
-            !(command.nsfw && interaction.channel &&
-                interaction.channel.isTextBased() &&
+            !(command.nsfw &&
+                interaction.channel?.isTextBased() &&
                 'nsfw' in interaction.channel &&
                 !interaction.channel.nsfw
             )
@@ -81,17 +77,19 @@ export default class Help extends Command {
             }
 
             await interaction.reply({ embeds: [embed] });
+            return;
         }
-        else if (category) {
+
+        if (category) {
             embed
                 .setTitle(category[0])
                 .setDescription(`\`${category.slice(1).join('`, `')}\``);
 
             await interaction.reply({ embeds: [embed] });
+            return;
         }
-        else {
-            await defaultHelp(client, interaction, languageHelp);
-        }
+
+        await defaultHelp(client, interaction, languageHelp);
     }
 }
 
@@ -101,8 +99,8 @@ export default class Help extends Command {
 
 async function defaultHelp(
     client: Client,
-    interaction: ChatInputCommandInteraction,
-    languageHelp: any
+    interaction: any,
+    languageHelp: HelpLanguage['names']
 ): Promise<void> {
     const embed = new EmbedBuilder()
         .setTitle(languageHelp.commandCategories)

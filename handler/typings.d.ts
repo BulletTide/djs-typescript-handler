@@ -3,9 +3,11 @@
 */
 
 import {
-    ApplicationCommandOptionData,
+    ApplicationCommandType,
     PermissionResolvable,
     ChatInputCommandInteraction,
+    UserContextMenuCommandInteraction,
+    MessageContextMenuCommandInteraction,
     AutocompleteInteraction
 } from 'discord.js';
 import { Client } from '../src/utils/client';
@@ -16,7 +18,10 @@ import { Client } from '../src/utils/client';
 
 export interface CommandExecutionContext {
     client: Client;
-    interaction: ChatInputCommandInteraction;
+    interaction:
+        | ChatInputCommandInteraction
+        | UserContextMenuCommandInteraction
+        | MessageContextMenuCommandInteraction;
     group: string | null;
     subcommand: string | null;
 }
@@ -32,9 +37,10 @@ export interface AutocompleteExecutionContext {
 
 export interface CommandOptions {
     name: string;
-    description: string;
+    description?: string;
+    type?: ApplicationCommandType;
     category?: string;
-    options?: ApplicationCommandOptionData[];
+
     development?: boolean;
     devOnly?: boolean;
     hideCommand?: boolean;
@@ -43,6 +49,8 @@ export interface CommandOptions {
     perms?: PermissionResolvable[];
     clientPerms?: PermissionResolvable[];
     nsfw?: boolean;
+
+    options?: unknown[];
     groups?: Record<string, SubcommandGroup> | null;
     subcommands?: Record<string, Subcommand> | null;
 }
@@ -78,7 +86,6 @@ export interface Argument {
         | 'NUMBER';
     name: string;
     description: string;
-    choices?: Choice[];
     required?: boolean;
     autocomplete?: (
         ctx: AutocompleteExecutionContext

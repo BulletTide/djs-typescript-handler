@@ -4,6 +4,7 @@
 
 import {
     ApplicationCommandOptionType,
+    ApplicationCommandType,
     PermissionResolvable
 } from 'discord.js';
 
@@ -30,9 +31,10 @@ class HandlerCommand {
     client: Client;
 
     name: string;
-    description: string;
-    category: string;
+    description?: string;
+    type: ApplicationCommandType;
 
+    category: string;
     options: APIApplicationCommandOption[];
     autocomplete: Map<string, Argument['autocomplete']>;
 
@@ -54,6 +56,7 @@ class HandlerCommand {
 
         this.name = opts.name;
         this.description = opts.description;
+        this.type = opts.type ?? ApplicationCommandType.ChatInput;
         this.category = opts.category ?? 'No category';
 
         this.development = opts.development ?? true;
@@ -70,6 +73,11 @@ class HandlerCommand {
         this.subcommands = opts.subcommands ?? null;
 
         this.autocomplete = new Map();
+
+        if (this.type !== ApplicationCommandType.ChatInput) {
+            this.options = [];
+            return;
+        }
 
         if (opts.options?.length) {
             this.options = opts.options as APIApplicationCommandOption[];

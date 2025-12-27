@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.3.0] - 2025-12-27
+
+### ✨ Added
+- Support for User and Message context menu commands
+- Unified command execution pipeline for slash and context menu commands
+- Typed execution context shared across all command types
+
+### 🚀 Changed
+- Formalized command execution contract via abstract base method
+- Improved internal type safety and ESLint enforcement
+
+### 🛠 Fixes
+- Correct command registration based on application command type
+- Prevented invalid command payloads during registration
+
+---
+
 ## [2.2.0] - 2025-12-27
 
 ### ✨ Added

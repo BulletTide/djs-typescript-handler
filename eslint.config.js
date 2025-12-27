@@ -56,6 +56,8 @@ export default [
       /* ----------------------------- */
       /* Code Quality / Logic          */
       /* ----------------------------- */
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-cond-assign': ['error', 'always'],
       'no-loss-of-precision': 'error',
       'no-template-curly-in-string': 'error',
       'template-curly-spacing': 'error',

@@ -5,10 +5,15 @@
 import {
     Client,
     ClientOptions,
-    Collection
+    Collection,
+    ApplicationCommandType
 } from 'discord.js';
 
-import { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord-api-types/v10';
+import {
+    RESTPostAPIChatInputApplicationCommandsJSONBody,
+    RESTPostAPIContextMenuApplicationCommandsJSONBody
+} from 'discord-api-types/v10';
+
 import { connect, Document } from 'mongoose';
 
 import { registerCommands, registerEvents } from './registry';
@@ -65,26 +70,44 @@ class HandlerClient extends Client {
     async loadCommands(): Promise<void> {
         await registerCommands(this, '../src/commands');
 
-        const guildCommands = toApplicationCommands(
-            this.commands.filter(cmd => cmd.development)
+        const guildChatInput = toChatInputCommands(
+            this.commands.filter(
+                c =>
+                    c.development &&
+                    c.type === ApplicationCommandType.ChatInput
+            )
         );
 
-        const globalCommands = toApplicationCommands(
-            this.commands.filter(cmd => !cmd.development)
+        const globalChatInput = toChatInputCommands(
+            this.commands.filter(
+                c =>
+                    !c.development &&
+                    c.type === ApplicationCommandType.ChatInput
+            )
         );
 
-        if (guildCommands.length) {
-            for (const guildId of this.config.DEV_SERVERS) {
-                const guild = await this.guilds.fetch(guildId).catch(() => null);
-                if (!guild) continue;
+        const contextMenus = toContextMenuCommands(
+            this.commands.filter(
+                c =>
+                    c.type === ApplicationCommandType.User ||
+                    c.type === ApplicationCommandType.Message
+            )
+        );
 
-                await guild.commands.set(guildCommands);
-            }
+        for (const guildId of this.config.DEV_SERVERS) {
+            const guild = await this.guilds.fetch(guildId).catch(() => null);
+            if (!guild) continue;
+
+            await guild.commands.set([
+                ...guildChatInput,
+                ...contextMenus
+            ]);
         }
 
-        if (globalCommands.length) {
-            await this.application!.commands.set(globalCommands);
-        }
+        await this.application!.commands.set([
+            ...globalChatInput,
+            ...contextMenus
+        ]);
     }
 
     async loadEvents(): Promise<void> {
@@ -111,12 +134,23 @@ export { HandlerClient };
 /* Helpers                                       */
 /* --------------------------------------------- */
 
-function toApplicationCommands(
+function toChatInputCommands(
     collection: Collection<string, Command>
 ): RESTPostAPIChatInputApplicationCommandsJSONBody[] {
     return collection.map(cmd => ({
         name: cmd.name,
-        description: cmd.description,
+        description: cmd.description!,
         options: cmd.options
+    }));
+}
+
+function toContextMenuCommands(
+    collection: Collection<string, Command>
+): RESTPostAPIContextMenuApplicationCommandsJSONBody[] {
+    return collection.map(cmd => ({
+        name: cmd.name,
+        type: cmd.type as
+            | ApplicationCommandType.User
+            | ApplicationCommandType.Message
     }));
 }

@@ -1,9 +1,9 @@
-import { CommandInteraction } from 'discord.js';
 import { Command } from '../../utils/command';
 import { Client } from '../../utils/client';
+import { CommandExecutionContext } from '../../../handler/typings';
 
-export default class Template extends Command {
-    constructor (client: Client) {
+export default class Ping extends Command {
+    constructor(client: Client) {
         super(client, {
             name: 'ping',
             description: 'Displays the bots websocket ping.',
@@ -11,8 +11,15 @@ export default class Template extends Command {
         });
     }
 
-    async execute ({ client, interaction }: { client: Client, interaction: CommandInteraction }): Promise<void> {
-        /* Returning the ping */
-        await client.utils.quickSuccess(interaction, `**Websocket Ping:** ${client.ws.ping}ms.`);
+    async execute({
+        client,
+        interaction
+    }: CommandExecutionContext): Promise<void> {
+        if (!interaction.isChatInputCommand()) return;
+
+        await client.utils.quickSuccess(
+            interaction,
+            `**Websocket Ping:** ${client.ws.ping}ms.`
+        );
     }
 }

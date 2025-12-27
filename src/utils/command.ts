@@ -1,10 +1,10 @@
-import { HandlerCommand, CommandOptions } from '../../handler/command';
-import { Client } from '../../src/utils/client';
+/*
+    Author: Bullet_Tide.
+*/
 
-class Command extends HandlerCommand {
-    constructor(client: Client, options: CommandOptions) {
-        super(client, options);
-    }
+import { HandlerCommand } from '../../handler/command';
+import { CommandExecutionContext } from '../../handler/typings';
+
+export abstract class Command extends HandlerCommand {
+    abstract execute(_ctx: CommandExecutionContext): Promise<void> | void;
 }
-
-export { Command };
