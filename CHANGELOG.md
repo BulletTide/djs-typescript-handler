@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.0.1] - 2025-12-27
+
+### 🛠 Fixes
+- Enforced `ownerOnly` and `devOnly` command flags
+- Added per-command execution error isolation
+- Prevented MongoDB connection when no URI is provided
+- Improved interaction safety and error handling
+
+---
+
+
 ## [2.0.0] - 2025-12-27
 
 ### 🚀 Major Changes

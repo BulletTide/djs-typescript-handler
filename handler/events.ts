@@ -44,9 +44,41 @@ export async function interactionCreate(
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
+    /* --------------------------------------------- */
+    /* Global Guards                                 */
+    /* --------------------------------------------- */
+
     if (command.guildOnly && !interaction.inGuild()) {
-        return client.utils.quickError(interaction, 'Server only command.');
+        return client.utils.quickError(
+            interaction,
+            'This command can only be used in a server.'
+        );
     }
+
+    if (command.ownerOnly) {
+        if (!interaction.inGuild() || !(client.config.DEV_SERVERS as string[]).includes(interaction.guildId!)) {
+            return client.utils.quickError(
+                interaction,
+                'This command is restricted to the bot owner.'
+            );
+        }
+    }
+
+    if (command.devOnly) {
+        if (
+            !interaction.inGuild() ||
+            !(client.config.DEV_SERVERS as string[]).includes(interaction.guildId!)
+        ) {
+            return client.utils.quickError(
+                interaction,
+                'This command can only be used in development servers.'
+            );
+        }
+    }
+
+    /* --------------------------------------------- */
+    /* Guild Context Checks                          */
+    /* --------------------------------------------- */
 
     if (interaction.inGuild()) {
         const guild = interaction.guild!;
@@ -59,7 +91,10 @@ export async function interactionCreate(
             channel?.type === ChannelType.GuildText &&
             !channel.nsfw
         ) {
-            return client.utils.quickError(interaction, 'NSFW only.');
+            return client.utils.quickError(
+                interaction,
+                'This command can only be used in NSFW channels.'
+            );
         }
 
         if (
@@ -67,16 +102,26 @@ export async function interactionCreate(
             channel?.isTextBased() &&
             !channel.permissionsFor(me)?.has(command.clientPerms)
         ) {
-            return client.utils.quickError(interaction, 'Missing bot permissions.');
+            return client.utils.quickError(
+                interaction,
+                'I am missing the required permissions to run this command.'
+            );
         }
 
         if (
             command.perms.length &&
             !member.permissions.has(command.perms)
         ) {
-            return client.utils.quickError(interaction, 'Missing user permissions.');
+            return client.utils.quickError(
+                interaction,
+                'You do not have permission to use this command.'
+            );
         }
     }
+
+    /* --------------------------------------------- */
+    /* Subcommand Resolution                         */
+    /* --------------------------------------------- */
 
     const group = interaction.options.getSubcommandGroup(false);
     const sub = interaction.options.getSubcommand(false);
@@ -88,10 +133,27 @@ export async function interactionCreate(
                 ? command.subcommands[sub]
                 : null;
 
-    await exec?.execute?.({
-        client,
-        interaction,
-        group,
-        subcommand: sub
-    });
+    /* --------------------------------------------- */
+    /* Safe Execution                                */
+    /* --------------------------------------------- */
+
+    try {
+        await exec?.execute?.({
+            client,
+            interaction,
+            group,
+            subcommand: sub
+        });
+    } catch (error) {
+        client.utils.log(
+            'ERROR',
+            `command:${command.name}`,
+            String(error)
+        );
+
+        await client.utils.quickError(
+            interaction,
+            'An unexpected error occurred while executing this command.'
+        );
+    }
 }

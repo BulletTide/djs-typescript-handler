@@ -92,6 +92,21 @@ Global commands:
 
 ## Adding a Command
 
+### Command Flags
+
+Commands support the following built-in flags:
+
+| Flag         | Description |
+|--------------|------------|
+| `ownerOnly`  | Only users listed in `DEVS` may execute |
+| `devOnly`    | Command only works in `DEV_SERVERS` |
+| `guildOnly`  | Prevents DM usage |
+| `nsfw`       | Requires an NSFW channel |
+| `hideCommand`| Hidden from help menu |
+
+These flags are **fully enforced by the handler** and require no additional code.
+
+
 ### Basic Command
 
     import { ChatInputCommandInteraction } from 'discord.js';

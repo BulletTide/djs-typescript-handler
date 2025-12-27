@@ -13,7 +13,6 @@ import {
 } from 'discord.js';
 
 import { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord-api-types/v10';
-
 import { connect, Document } from 'mongoose';
 
 import { registerCommands, registerEvents } from './registry';
@@ -32,7 +31,6 @@ class HandlerClient extends Client {
     commands: Collection<string, Command>;
     categories: Collection<string, string[]>;
 
-    // ✅ Mongoose owns persistence typing
     guildInfo: Manager<string, Document>;
     profileInfo: Manager<string, Document>;
 
@@ -46,7 +44,6 @@ class HandlerClient extends Client {
         this.commands = new Collection();
         this.categories = new Collection();
 
-        // ✅ No casts, no hacks, no lies
         this.guildInfo = new Manager(this, guildModel);
         this.profileInfo = new Manager(this, profileModel);
 
@@ -86,7 +83,10 @@ class HandlerClient extends Client {
     }
 
     async login(token: string): Promise<string> {
-        await connect(this.config.MONGODB_URI);
+        if (this.config.MONGODB_URI) {
+            await connect(this.config.MONGODB_URI);
+        }
+
         await super.login(token);
 
         await this.loadEvents();
